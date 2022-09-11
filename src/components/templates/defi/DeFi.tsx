@@ -1,6 +1,6 @@
 import { Box, Grid, GridItem, Text, SimpleGrid } from '@chakra-ui/react';
 import { Avatar, Information, PlanCard, Button, Input, Modal, Typography } from '@web3uikit/core';
-import { useState } from 'react';
+import React, { useState, } from 'react';
 import { useMoralis } from 'react-moralis';
 import numberWithCommas from 'utils/numberWithComas';
 
@@ -18,7 +18,7 @@ const DeFi = (props: any) => {
           functionName: 'buyTokens',
           msgValue: Moralis.Units.ETH(parseFloat(values.amount) / 200),
           abi: crowdFunding,
-          awaitReceipt: true, // should be switched to false
+          awaitReceipt: true,
           params: {
             beneficiary: user.get('ethAddress'),
           },
@@ -30,7 +30,6 @@ const DeFi = (props: any) => {
       }
     } catch (e: any) {
       console.log(e.message);
-      return;
     }
   };
 
@@ -41,7 +40,7 @@ const DeFi = (props: any) => {
   const handleOpen = (val: boolean) => {
     setOpen(val);
   };
-  const handleChanges = (prop: keyof any) => (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChanges = (prop: keyof any) => (event: React.ChangeEvent<any>) => {
     if (prop === 'amount') {
       if (parseFloat(event.target.value).toString().length > 12) {
         return;

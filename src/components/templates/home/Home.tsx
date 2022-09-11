@@ -120,8 +120,8 @@ const Home = (props: any) => {
       console.log('res');
 
       if (!user?.get('tokenAdded') ) {
-        let window=global.window
-    if (typeof window !== 'undefined' && typeof window.ethereum !== 'undefined') {
+        const {window}=global.window
+    if ( window !== undefined &&  window.ethereum !== undefined) {
         
       
         await window.ethereum.request({
