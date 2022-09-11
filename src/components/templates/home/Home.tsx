@@ -265,9 +265,6 @@ setRewardsToClaim(0)
    const transactionRewardsOf = await contract2
    .connect(signer)
    .rewardsOf(0,ownedItems2[i].tokenId)
-   .catch(() => {
-     handleUserNotification('warning');
-   });
    
    rewardsToClaim2=rewardsToClaim2+Math.trunc(parseFloat(Moralis.Units.FromWei(transactionRewardsOf[1].toString())))
      tokenids = [...tokenids, ownedItems2[i].tokenId];
@@ -275,7 +272,6 @@ setRewardsToClaim(0)
    
 
 setRewardsToClaim(rewardsToClaim2.toString())
-      handleNoFundsNotification('warning');
       } catch (e: any) {
         console.log('error'+e.message);
       }
@@ -483,7 +479,7 @@ setRewardsToClaim(rewardsToClaim2.toString())
 
             <Box style={{ flex: 1, justifyContent: 'center', paddingLeft: '20%', alignItems: 'center' }}>
               <Text marginLeft={'0%'} marginTop={'50px'} fontSize="3xl" textAlign={'left'}>
-                {numberWithComas(rewardAmount - claimedAmount)?.concat(' DKMT still in Rewards')}
+                {numberWithComas(rewardAmount - claimedAmount)?.concat(' DKMT in Rewards')}
               </Text>
               <Text marginLeft={'0%'} marginTop={'10px'} fontSize="2xl" textAlign={'left'}>
                 {' Planet ID define the  rarity:'}
@@ -533,7 +529,7 @@ setRewardsToClaim(rewardsToClaim2.toString())
           }}
         >
           <Text marginTop={'50px'} marginLeft={props.width < 600 ? 0 : 20} minW={250} fontSize="6xl" textAlign={'left'}>
-            {planets.toString().concat('/10000 Planets')}
+            {planets.toString().concat('/10000 PLANETS')}
           </Text>
 
           <Carousel
@@ -583,7 +579,7 @@ setRewardsToClaim(rewardsToClaim2.toString())
           }}
         >
           <Text marginTop={0} marginLeft={props.width < 600 ? 0 : 20} minW={250} fontSize="6xl" textAlign={'left'}>
-            {'My Planets '.concat(myPlanets.length)}
+            {'MY PLANETS '.concat(myPlanets.length)}
           </Text>
 
           <Carousel
