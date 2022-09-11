@@ -2,7 +2,7 @@ import { Default } from 'components/layouts/Default';
 import { GetServerSideProps, NextPage } from 'next';
 import { getSession } from 'next-auth/react';
 import Moralis from 'moralis';
-import { Protected } from 'components/templates/Protected';
+import { Protected } from 'components/templates/protected';
 
 const ProtectedPage: NextPage<any> = (props) => {
   return (
