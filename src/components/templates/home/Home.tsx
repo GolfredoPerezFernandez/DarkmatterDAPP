@@ -40,8 +40,9 @@ const Home = (props: any) => {
 
   const [claimedAmount, setClaimedAmount] = useState<any>(0);
   const [planetsCreated, setPlanetsCreated] = useState<any>([]);
+  const [myPlanets, setMyPlanets] = useState<any>([]);
   const [planets, setTotalPlanets] = useState<any>(0);
-
+const [rewardsToClaim,setRewardsToClaim]=useState<any>(0);
   const collectionSubscriptionSongbird = async () => {
     const query = new Moralis.Query('PlanetsSongbird');
     const subscription = await query.subscribe();
@@ -58,12 +59,27 @@ const Home = (props: any) => {
     initPlanets();
   });
 
-
   useEffect(() => {
     async function init() {
-      if (user) {
-        console.log();
-      }
+      
+  const ownedItems2 = await Moralis.Cloud.run('getPlanetsSongbird',{owner:user.get("ethAddress")});
+  let market2: any[] = [];
+
+  for (let i = 0; i < ownedItems2.length; i++) {
+    const newItem: any = {
+      name: ownedItems2[i].name,
+      marketId: ownedItems2[i].owner,
+      tokenId: ownedItems2[i].tokenId,
+      contractType: ownedItems2[i].description,
+      tokenAddress: ownedItems2[i].tokenAddress,
+      metadataFilePath: ownedItems2[i].metadataFilePath,
+      image: ownedItems2[i].image,
+    };
+
+    market2 = [...market2, newItem];
+  }
+setMyPlanets([...market2])
+
       const ownedItems = await Moralis.Cloud.run('getAllItemsSongbird');
       let market: any[] = [];
 
@@ -74,7 +90,7 @@ const Home = (props: any) => {
           tokenId: ownedItems[i].tokenId,
           contractType: ownedItems[i].description,
           tokenAddress: ownedItems[i].tokenAddress,
-          salesAmount: ownedItems[i].metadataFilePath,
+          metadataFilePath: ownedItems[i].metadataFilePath,
           image: ownedItems[i].image,
         };
 
@@ -102,22 +118,39 @@ const Home = (props: any) => {
         setClaimedAmount(Moralis.Units.FromWei(transaction2[5]));
 
         setRewardAmount(Moralis.Units.FromWei(transaction2[4]));
+  
 
+   let tokenids: any = [];
+   let rewardsToClaim2 = 0;
+
+   const ownedItems2 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user?.get('ethAddress') });
+
+   for (let i = 0; i < ownedItems2.length; i++) {
+    
+   const transactionRewardsOf = await contract
+   .connect(signer)
+   .rewardsOf(0,ownedItems2[i].tokenId)
+   .catch(() => {
+     handleUserNotification('warning');
+   });
+
+   rewardsToClaim2=Math.trunc(parseFloat(Moralis.Units.FromWei(transactionRewardsOf[1].toString())))+rewardsToClaim2
+     tokenids = [...tokenids, ownedItems2[i].tokenId];
+    
+   }
    
+setRewardsToClaim(rewardsToClaim2.toString())
       }
     }
     init();
-  }, [isWeb3Enabled, isAuthenticated]);
+  }, [isWeb3Enabled,isAuthenticated ]);
   const claimRewards = async () => {
     if (isWeb3Enabled && isAuthenticated) {
       const provider = await Moralis.enableWeb3({ provider: 'metamask' });
       const ethers = Moralis.web3Library;
-      console.log('res');
-
       const signer = provider.getSigner();
-      console.log('res');
       const contract = new ethers.Contract('0x3F5eE9E1632Aa3fa688875050f9C9a486bA82179', abi.rewards, provider);
-      console.log('res');
+   
 
       if (!user?.get('tokenAdded') ) {
         const {window}=global.window
@@ -144,10 +177,8 @@ const Home = (props: any) => {
       let tokenids: any = [];
 
       const ownedItems2 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user?.get('ethAddress') });
-
       for (let i = 0; i < ownedItems2.length; i++) {
         tokenids = [...tokenids, ownedItems2[i].tokenId];
-        console.log(ownedItems2[i].tokenId);
       }
      await contract
         .connect(signer)
@@ -155,6 +186,10 @@ const Home = (props: any) => {
         .catch(() => {
           handleNoNftNotification('warning');
         });
+
+   
+
+setRewardsToClaim(0)
     } else {
       if (isWeb3Enabled) {
         authenticate();
@@ -172,9 +207,10 @@ const Home = (props: any) => {
 
       const contract = new ethers.Contract('0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4', abi.collection, provider);
      
+      const contract2 = new ethers.Contract('0x3F5eE9E1632Aa3fa688875050f9C9a486bA82179', abi.rewards, provider);
+     
       const transaction2 = await contract.connect(signer).mintedAmt();
 
-      console.log(parseFloat(transaction2));
       const transaction = await contract
         .connect(signer)
         .safeMint(1, { value: Moralis.Units.ETH(1) })
@@ -208,9 +244,40 @@ const Home = (props: any) => {
         queryResult.set('tokenId', parseInt(wait.logs[0].topics[3].toString(), 16).toString());
 
         await queryResult.save();
+
         user.set("canClaim",true)
+        handleMintNotification('success');
+        setMyPlanets([...myPlanets,{owner:user.get('ethAddress'),planetId:(parseFloat(transaction2) + 1).toString()
+      ,tokenAddress:"0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4",name:"Planet #".concat(parseInt(wait.logs[0].topics[3].toString(), 16).toString()),
+    description:'Planets are the base of your empire.',metadataFilePath:'https://ipfs.moralis.io:2053/ipfs/QmUSRueYhgvJBF7Y5znbHWbhMHKBHPaZNjjj3apEytmDdF/metadata/'
+    .concat(parseInt(wait.logs[0].topics[3].toString(), 16).toString())
+    .concat('.json'),image:
+    'https://theuniverse.mypinata.cloud/ipfs/QmdBJczfNV4HHcucXxPkehqK5LG5iqU6AG3tX83WeUfdgK/'
+      .concat(parseInt(wait.logs[0].topics[3].toString(), 16).toString())
+      .concat('.png'),tokenId:parseInt(wait.logs[0].topics[3].toString(), 16).toString()}])
+   let tokenids: any = [];
+   let rewardsToClaim2 = 0;
+
+   const ownedItems2 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user?.get('ethAddress') });
+
+   for (let i = 0; i < ownedItems2.length; i++) {
+    
+   const transactionRewardsOf = await contract2
+   .connect(signer)
+   .rewardsOf(0,ownedItems2[i].tokenId)
+   .catch(() => {
+     handleUserNotification('warning');
+   });
+   
+   rewardsToClaim2=rewardsToClaim2+Math.trunc(parseFloat(Moralis.Units.FromWei(transactionRewardsOf[1].toString())))
+     tokenids = [...tokenids, ownedItems2[i].tokenId];
+   }
+   
+
+setRewardsToClaim(rewardsToClaim2.toString())
+      handleNoFundsNotification('warning');
       } catch (e: any) {
-        console.log('error');
+        console.log('error'+e.message);
       }
     } else {
       handleUserNotification('warning');
@@ -233,6 +300,16 @@ const Home = (props: any) => {
       type,
       message: 'Enable Web3',
       title: 'Please connect you wallet',
+      icon,
+      position: position || 'topR',
+    });
+  };
+
+  const handleMintNotification = (type: notifyType, icon?: React.ReactElement, position?: IPosition) => {
+    dispatch({
+      type,
+      message: 'You bought a Planet',
+      title: 'Congratulations',
       icon,
       position: position || 'topR',
     });
@@ -312,7 +389,7 @@ const Home = (props: any) => {
             />{' '}
             <Box style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
               <Text marginLeft={'0%'} marginTop={'50px'} fontSize="3xl" textAlign={'right'}>
-                {numberWithComas(rewardAmount - claimedAmount)?.concat(' DKMT still in Rewards')}
+                {numberWithComas(rewardAmount - claimedAmount)?.concat(' DKMT in Rewards')}
               </Text>
               <Text marginLeft={'0%'} marginTop={'10px'} fontSize="2xl" textAlign={'right'}>
                 {' Planet ID define the  rarity:'}
@@ -322,6 +399,9 @@ const Home = (props: any) => {
                 {'1 to 500 Legendary'}
               </Text>
 
+              <Text marginLeft={'0%'} marginTop={'20px'} fontSize="1xl" textAlign={'right'}>
+                {'500 to 1500 Epic'}
+              </Text>
               <Text marginLeft={'0%'} marginTop={'20px'} fontSize="1xl" textAlign={'right'}>
                 {'1500 to 3000 Rare'}
               </Text>
@@ -334,12 +414,12 @@ const Home = (props: any) => {
               </Text>
 
               <Text marginLeft={'0%'} marginTop={'30px'} fontSize="2xl" textAlign={'right'}>
-                {' Claim your NFT Rewards:'}
+                {' Claim your planet rewards:'}
               </Text>
              
              <Box>
 <Text marginTop={'0'} marginBottom={5} fontSize="6xl" textAlign={'right'}>
-                {planets.toString().concat('  DMKT')}
+                {rewardsToClaim.toString().concat('  DKMT')}
               </Text>
               <Box
                 style={{
@@ -368,7 +448,7 @@ const Home = (props: any) => {
                   onClick={mintNow}
                   customize={{ backgroundColor: '#000228', textColor: 'white' }}
                   isFullWidth
-                  text="Creation Cost 1000 SGB"
+                  text="Creation Cost 1200 SGB"
                   theme="custom"
                 />
               }
@@ -414,6 +494,9 @@ const Home = (props: any) => {
               </Text>
 
               <Text marginLeft={'0%'} marginTop={'20px'} fontSize="1xl" textAlign={'left'}>
+                {'500 to 1500 Epic'}
+              </Text>
+              <Text marginLeft={'0%'} marginTop={'20px'} fontSize="1xl" textAlign={'left'}>
                 {'1500 to 3000 Rare'}
               </Text>
               <Text marginLeft={'0%'} marginTop={'20px'} fontSize="1xl" textAlign={'left'}>
@@ -425,10 +508,10 @@ const Home = (props: any) => {
               </Text>
 
               <Text marginLeft={'0%'} marginTop={'30px'} fontSize="2xl" textAlign={'left'}>
-                {' Claim your NFT Rewards:'}
+                {' Claim your planet rewards:'}
               </Text>
               <Text marginTop={'0'} marginBottom={5} fontSize="6xl" textAlign={'left'}>
-                {planets.toString().concat('  DMKT')}
+                {rewardsToClaim.toString().concat('  DKMT')}
               </Text>
 
               <Box style={{ flex: 1, width: 200, alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}>
@@ -500,7 +583,7 @@ const Home = (props: any) => {
           }}
         >
           <Text marginTop={0} marginLeft={props.width < 600 ? 0 : 20} minW={250} fontSize="6xl" textAlign={'left'}>
-            {'My Planets'}
+            {'My Planets '.concat(myPlanets.length)}
           </Text>
 
           <Carousel
@@ -529,7 +612,7 @@ const Home = (props: any) => {
             transitionDuration={6000}
             rtl={false}
           >
-            {planetsCreated.map((card: any) => {
+            {myPlanets.map((card: any) => {
               return (
                 <Box>
                   <Image rounded={20} marginLeft={10} marginRight={10} width={200} height={200} src={card.image} />

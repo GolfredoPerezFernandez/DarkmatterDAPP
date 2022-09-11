@@ -14,9 +14,9 @@ const DeFi = (props: any) => {
         console.log(Moralis.Units.ETH(parseFloat(values.amount) * 0.005));
         console.log(parseFloat(values.amount));
         const sendOptions1 = {
-          contractAddress: '0xBadCe077034d125eF2182e313af53aC265A2dd64',
+          contractAddress: '0xd3d74F421713996394e3A8EE1036c8130b8140d3',
           functionName: 'buyTokens',
-          msgValue: Moralis.Units.ETH(parseFloat(values.amount) / 200),
+          msgValue: Moralis.Units.ETH(parseFloat(values.amount) / 10),
           abi: crowdFunding,
           awaitReceipt: true,
           params: {
@@ -82,7 +82,7 @@ const DeFi = (props: any) => {
                       onClick={() => handleOpen(true)}
                       customize={{ backgroundColor: '#000228', textColor: 'white' }}
                       isFullWidth
-                      text="0.005 SGB per DKMT"
+                      text="0.1 SGB per DKMT"
                       theme="custom"
                     />
                   }
