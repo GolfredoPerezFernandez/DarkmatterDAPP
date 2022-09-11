@@ -33,8 +33,9 @@ const Header = (props: any) => {
               account: user?.get('ethAddress'),
             },
           };
-          let ownerOf = await Moralis.executeFunction(sendOptionsSymbol3);
-          console.log('balance ' + ownerOf);
+          const ownerOf = await Moralis.executeFunction(sendOptionsSymbol3);
+        
+          
           setBalance(Math.round(parseFloat(Moralis.Units.FromWei(ownerOf.toString()))).toString());
         }
       }

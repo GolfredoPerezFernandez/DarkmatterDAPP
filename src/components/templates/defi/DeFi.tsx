@@ -5,11 +5,11 @@ import { useMoralis } from 'react-moralis';
 import numberWithCommas from 'utils/numberWithComas';
 
 const DeFi = (props: any) => {
-  const { Moralis, user, isWeb3Enabled, enableWeb3, isAuthenticated, authenticate } = useMoralis();
+  const { Moralis, user, isWeb3Enabled,  isAuthenticated } = useMoralis();
   const [open, setOpen] = useState(false);
   const handleBuy = async () => {
     try {
-      if (user && isWeb3Enabled) {
+      if (user && isWeb3Enabled&&isAuthenticated) {
         console.log(user.get('ethAddress'));
         console.log(Moralis.Units.ETH(parseFloat(values.amount) * 0.005));
         console.log(parseFloat(values.amount));
@@ -42,7 +42,7 @@ const DeFi = (props: any) => {
     setOpen(val);
   };
   const handleChanges = (prop: keyof any) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (prop == 'amount') {
+    if (prop === 'amount') {
       if (parseFloat(event.target.value).toString().length > 12) {
         return;
       }

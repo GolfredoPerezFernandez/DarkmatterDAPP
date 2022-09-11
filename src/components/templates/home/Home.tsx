@@ -35,141 +35,32 @@ const responsive = {
 };
 
 const Home = (props: any) => {
-  const { Moralis, user, isWeb3Enabled, enableWeb3, isAuthenticated, authenticate } = useMoralis();
+  const { Moralis, user, isWeb3Enabled,  isAuthenticated, authenticate } = useMoralis();
   const [rewardAmount, setRewardAmount] = useState<any>(0);
 
   const [claimedAmount, setClaimedAmount] = useState<any>(0);
-  const [tokenIds, setTokenIds] = useState<any>([]);
   const [planetsCreated, setPlanetsCreated] = useState<any>([]);
   const [planets, setTotalPlanets] = useState<any>(0);
-  const [claim, setClaim] = useState<any>(0);
 
   const collectionSubscriptionSongbird = async () => {
     const query = new Moralis.Query('PlanetsSongbird');
-    let subscription = await query.subscribe();
-    subscription.on('create', init);
+    const subscription = await query.subscribe();
+    subscription.on('create', initPlanets);
   };
 
-  async function init() {
+  async function initPlanets() {
     const ownedItems = await Moralis.Cloud.run('getTotalPlanetsSongbird');
     setTotalPlanets(ownedItems);
   }
   useEffect(() => {
     collectionSubscriptionSongbird();
 
-    init();
+    initPlanets();
   });
 
-  async function fixMissing(val) {
-    const currentUser = await Moralis.User.current();
-    if (!user) {
-      return;
-    }
-    if (currentUser) {
-      const web3 = await Moralis.enableWeb3();
-
-      const sendOptionsSymbol = {
-        contractAddress: '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4',
-        functionName: 'mintedAmt',
-        abi: abi.collection,
-      };
-      let total = await Moralis.executeFunction(sendOptionsSymbol);
-      let k = 0;
-      try {
-        for (let i = k; i < parseInt(total.toString()); i++) {
-          k++;
-          const sendOptionsSymbol2 = {
-            contractAddress: '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4',
-            functionName: 'tokenByIndex',
-            abi: abi.collection,
-            params: {
-              index: i,
-            },
-          };
-
-          let tokenId = await Moralis.executeFunction(sendOptionsSymbol2);
-          console.log('index ' + JSON.stringify(i));
-
-          console.log('index ' + tokenId);
-          var getSalesCount = await Moralis.Cloud.run('getPlanetSongbirdById', {
-            tokenId: tokenId.toString(),
-            tokenAddress: '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4'.toLowerCase(),
-          });
-          console.log('index ' + JSON.stringify(getSalesCount));
-          if (getSalesCount.tokenId) {
-            const sendOptionsSymbol3 = {
-              contractAddress: '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4',
-              functionName: 'ownerOf',
-              abi: abi.collection,
-              params: {
-                tokenId: getSalesCount.tokenId,
-              },
-            };
-
-            let ownerOf = await Moralis.executeFunction(sendOptionsSymbol3);
-
-            if (ownerOf.toString().toLowerCase() === getSalesCount.owner.toLowerCase()) {
-              console.log(JSON.stringify('Is Owner'));
-            } else {
-              const Item2 = Moralis.Object.extend('PlanetsSongbird');
-              const query = await new Moralis.Query(Item2);
-              await query.equalTo('tokenId', getSalesCount.tokenId);
-
-              const result = await query.first();
-              if (result) {
-                await result.set('owner', ownerOf.toString().toLowerCase());
-                await result.save();
-              }
-              console.log(JSON.stringify('not Owner Fixed'));
-            }
-          } else {
-            const sendOptionsSymbol3 = {
-              contractAddress: '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4',
-              functionName: 'ownerOf',
-              abi: abi.collection,
-              params: {
-                tokenId: tokenId,
-              },
-            };
-            let ownerOf = await Moralis.executeFunction(sendOptionsSymbol3);
-            console.log(JSON.stringify('Not in database ' + ownerOf));
-            const Item = Moralis.Object.extend('PlanetsSongbird');
-            const queryResult = new Item();
-            queryResult.set('owner', ownerOf);
-            queryResult.set('tokenAddress', '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4'.toLowerCase());
-
-            queryResult.set('planetId', i.toString());
-            queryResult.set('name', 'Planet #'.concat(tokenId.toString()));
-            queryResult.set('description', 'Planets are the base of your empire.');
-            queryResult.set(
-              'metadataFilePath',
-              'https://ipfs.moralis.io:2053/ipfs/QmUSRueYhgvJBF7Y5znbHWbhMHKBHPaZNjjj3apEytmDdF/metadata/'
-                .concat(tokenId.toString())
-                .toString(),
-            );
-            queryResult.set('metadataFileHash', 'QmUSRueYhgvJBF7Y5znbHWbhMHKBHPaZNjjj3apEytmDdF');
-            queryResult.set(
-              'image',
-              'https://theuniverse.mypinata.cloud/ipfs/QmdBJczfNV4HHcucXxPkehqK5LG5iqU6AG3tX83WeUfdgK/'
-                .concat(tokenId.toString())
-                .concat('.png'),
-            );
-            queryResult.set('tokenId', tokenId.toString());
-
-            await queryResult.save();
-          }
-        }
-      } catch {}
-
-      return;
-    } else {
-      console.log('error no usuario');
-    }
-  }
 
   useEffect(() => {
     async function init() {
-      let tokenids: any[] = [];
       if (user) {
         console.log();
       }
@@ -193,45 +84,26 @@ const Home = (props: any) => {
       if (isWeb3Enabled && isAuthenticated) {
         const provider = await Moralis.enableWeb3({ provider: 'metamask' });
         const ethers = Moralis.web3Library;
-        console.log('res');
+     
 
         const signer = provider.getSigner();
-        console.log('res');
+      
 
         const contract = new ethers.Contract('0x3F5eE9E1632Aa3fa688875050f9C9a486bA82179', abi.rewards, provider);
-        console.log('res');
-        const transaction = await contract
-          .connect(signer)
-          .totalPools()
-          .catch(() => {
-            handleUserNotification('warning');
-          });
+      
+        
         const transaction2 = await contract
           .connect(signer)
           .poolInfoOfId(0)
           .catch(() => {
             handleUserNotification('warning');
           });
-        console.log('res4 ' + transaction2);
 
         setClaimedAmount(Moralis.Units.FromWei(transaction2[5]));
 
         setRewardAmount(Moralis.Units.FromWei(transaction2[4]));
 
-        const transaction66 = await contract
-          .connect(signer)
-          .rewardsOf(0, 1)
-          .catch(() => {
-            handleUserNotification('warning');
-          });
-
-        const transaction5 = await contract
-          .connect(signer)
-          .rarityRangeArr(0)
-          .catch(() => {
-            handleUserNotification('warning');
-          });
-        console.log('res4 ' + transaction5);
+   
       }
     }
     init();
@@ -247,64 +119,59 @@ const Home = (props: any) => {
       const contract = new ethers.Contract('0x3F5eE9E1632Aa3fa688875050f9C9a486bA82179', abi.rewards, provider);
       console.log('res');
 
-      if (!user?.get('tokenAdded') && window) {
-        await window?.ethereum.request({
+      if (!user?.get('tokenAdded') ) {
+        
+    if (typeof window !== 'undefined' && typeof window.ethereum !== 'undefined') {
+        
+      
+        await window.ethereum.request({
           method: 'wallet_watchAsset',
           params: {
-            type: 'ERC20', // Initially only supports ERC20, but eventually more!
+            type: 'ERC20', 
             options: {
               address: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
               symbol: 'DKMT',
               decimals: 18,
-              image: 'https://theuniverse.mypinata.cloud/ipfs/Qmdh3Kv5SvK6NHNY6MUXsrKWimUF9bTLTqhRWpWrNJiatR', // if you have the image, it goes here
+              image: 'https://theuniverse.mypinata.cloud/ipfs/Qmdh3Kv5SvK6NHNY6MUXsrKWimUF9bTLTqhRWpWrNJiatR', 
             },
           },
         });
 
         user?.set('tokenAdded', true);
-        user?.save();
-      }
+        user?.save(); 
+    
+      }   }
       let tokenids: any = [];
 
-      const ownedItems2 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user.get('ethAddress') });
-
-      console.log('ownedItems2 ' + ownedItems2);
+      const ownedItems2 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user?.get('ethAddress') });
 
       for (let i = 0; i < ownedItems2.length; i++) {
         tokenids = [...tokenids, ownedItems2[i].tokenId];
         console.log(ownedItems2[i].tokenId);
       }
-      setTokenIds(tokenids);
-      const transaction = await contract
+     await contract
         .connect(signer)
         .claimRewardsOf(tokenids)
         .catch(() => {
           handleNoNftNotification('warning');
         });
-      let res = await transaction?.wait(4);
-      console.log('res' + JSON.stringify(res));
     } else {
       if (isWeb3Enabled) {
         authenticate();
-      } else {
       }
     }
   };
   const mintNow = async () => {
-    console.log('res');
 
     if (user) {
-      console.log('res');
 
       const provider = await Moralis.enableWeb3({ provider: 'metamask' });
       const ethers = Moralis.web3Library;
-      console.log('res');
 
       const signer = provider.getSigner();
-      console.log('res');
 
       const contract = new ethers.Contract('0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4', abi.collection, provider);
-      console.log('res');
+     
       const transaction2 = await contract.connect(signer).mintedAmt();
 
       console.log(parseFloat(transaction2));
@@ -317,9 +184,6 @@ const Home = (props: any) => {
 
       const wait = await transaction?.wait();
       try {
-        const transaction = await contract.connect(signer).mintedAmt();
-
-        console.log(JSON.stringify(transaction));
         const Item = Moralis.Object.extend('PlanetsSongbird');
         const queryResult = new Item();
         queryResult.set('owner', user.get('ethAddress'));
@@ -344,6 +208,7 @@ const Home = (props: any) => {
         queryResult.set('tokenId', parseInt(wait.logs[0].topics[3].toString(), 16).toString());
 
         await queryResult.save();
+        user.set("canClaim",true)
       } catch (e: any) {
         console.log('error');
       }
@@ -471,10 +336,11 @@ const Home = (props: any) => {
               <Text marginLeft={'0%'} marginTop={'30px'} fontSize="2xl" textAlign={'right'}>
                 {' Claim your NFT Rewards:'}
               </Text>
-              <Text marginTop={'0'} marginBottom={5} fontSize="6xl" textAlign={'right'}>
+             
+             <Box>
+<Text marginTop={'0'} marginBottom={5} fontSize="6xl" textAlign={'right'}>
                 {planets.toString().concat('  DMKT')}
               </Text>
-
               <Box
                 style={{
                   flex: 1,
@@ -485,8 +351,8 @@ const Home = (props: any) => {
                   alignItems: 'flex-end',
                 }}
               >
-                <Button onClick={claimRewards} isFullWidth text="Claim Rewards" theme="secondary" />
-              </Box>
+                <Button disabled={user?.get("canClaim")===true} onClick={claimRewards} isFullWidth text="Claim Rewards" theme="secondary" />
+              </Box></Box>
             </Box>
           </VStack>
         ) : (
