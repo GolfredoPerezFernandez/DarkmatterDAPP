@@ -36,7 +36,7 @@ const responsive = {
 
 const Home = (props: any) => {
   const { Moralis, user, isWeb3Enabled,  isAuthenticated, authenticate } = useMoralis();
-  const [rewardAmount, setRewardAmount] = useState<any>(0);
+  const [rewardAmount, setRewardAmount] = useState<number>(0);
 
   const [claimedAmount, setClaimedAmount] = useState<any>(0);
   const [planetsCreated, setPlanetsCreated] = useState<any>([]);
@@ -62,6 +62,7 @@ const [rewardsToClaim,setRewardsToClaim]=useState<any>(0);
   useEffect(() => {
     async function init() {
       
+  setRewardAmount(0);
   const ownedItems2 = await Moralis.Cloud.run('getPlanetsSongbird',{owner:user?.get("ethAddress")});
   let market2: any[] = [];
 
@@ -114,10 +115,13 @@ setMyPlanets([...market2])
           .catch(() => {
             handleUserNotification('warning');
           });
+let rewa=Moralis.Units.FromWei(transaction2[4])
+if(parseFloat(rewa)===0){
 
+  setRewardAmount(parseFloat(rewa));
+}
         setClaimedAmount(Moralis.Units.FromWei(transaction2[5]));
 
-        setRewardAmount(Moralis.Units.FromWei(transaction2[4]));
   
 
    let rewardsToClaim2 = 0;
@@ -184,11 +188,14 @@ setRewardsToClaim(rewardsToClaim2.toString())
         .claimRewardsOf(tokenids)
         .catch(() => {
           handleNoNftNotification('warning');
+        }).then(()=>{
+          
+setRewardsToClaim(0)
         });
+
 
    
 
-setRewardsToClaim(0)
     } else {
       if (isWeb3Enabled) {
         authenticate();
@@ -415,6 +422,9 @@ setRewardsToClaim(rewardsToClaim2.toString())
 <Text marginTop={'0'} marginBottom={5} fontSize="6xl" textAlign={'right'}>
                 {rewardsToClaim.toString().concat('  DKMT')}
               </Text>
+              {rewardsToClaim>0?
+                 <Button  onClick={claimRewards} isFullWidth text="Claim Rewards" theme="secondary" />
+                 :null}
               <Box
                 style={{
                   flex: 1,
@@ -425,8 +435,7 @@ setRewardsToClaim(rewardsToClaim2.toString())
                   alignItems: 'flex-end',
                 }}
               >
-                <Button disabled={user?.get("canClaim")===true} onClick={claimRewards} isFullWidth text="Claim Rewards" theme="secondary" />
-              </Box></Box>
+               </Box></Box>
             </Box>
           </VStack>
         ) : (
@@ -507,10 +516,11 @@ setRewardsToClaim(rewardsToClaim2.toString())
               <Text marginTop={'0'} marginBottom={5} fontSize="6xl" textAlign={'left'}>
                 {rewardsToClaim.toString().concat('  DKMT')}
               </Text>
-
+              
+                  {rewardsToClaim>0?
               <Box style={{ flex: 1, width: 200, alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}>
                 <Button onClick={claimRewards} isFullWidth text="Claim Rewards" theme="secondary" />
-              </Box>
+              </Box>: null}
             </Box>
           </HStack>
         )}
