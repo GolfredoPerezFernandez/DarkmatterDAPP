@@ -120,13 +120,12 @@ setMyPlanets([...market2])
         setRewardAmount(Moralis.Units.FromWei(transaction2[4]));
   
 
-   let tokenids: any = [];
    let rewardsToClaim2 = 0;
 
    const ownedItems3 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user?.get('ethAddress') });
 
     
-   await Promise.all(ownedItems2.map(async (item:any,index:any) => {
+   await Promise.all(ownedItems3.map(async (item:any,index:any) => {
     const transactionRewardsOf = await contract
     .connect(signer)
     .rewardsOf(0,ownedItems2[index].tokenId)
