@@ -1,0 +1,693 @@
+/* eslint @typescript-eslint/no-var-requires: "off" */
+
+import { Box, Text, Image, HStack, VStack } from '@chakra-ui/react';
+import { Avatar, PlanCard, Button, Illustration, useNotification, notifyType, IPosition } from '@web3uikit/core';
+import { Footer } from 'components/modules';
+import React, { useEffect, useState } from 'react';
+import 'react-alice-carousel/lib/alice-carousel.css';
+import { useMoralis } from 'react-moralis';
+const abi = require('./abi');
+const FlipCountdown = require('@rumess/react-flip-countdown');
+import Link from 'next/link';
+
+import 'react-multi-carousel/lib/styles.css';
+import 'react-alice-carousel/lib/alice-carousel.css';
+import Carousel from 'react-multi-carousel';
+import numberWithComas from 'utils/numberWithComas';
+
+const responsive = {
+  superLargeDesktop: {
+    breakpoint: { max: 4000, min: 1700 },
+    items: 8,
+  },
+  desktop: {
+    breakpoint: { max: 1700, min: 1024 },
+    items: 5,
+  },
+  tablet: {
+    breakpoint: { max: 1024, min: 464 },
+    items: 2,
+  },
+  mobile: {
+    breakpoint: { max: 464, min: 0 },
+    items: 1,
+  },
+};
+
+const Home = (props: any) => {
+  const { Moralis, user, isWeb3Enabled, enableWeb3, isAuthenticated, authenticate } = useMoralis();
+  const [rewardAmount, setRewardAmount] = useState<any>(0);
+
+  const [claimedAmount, setClaimedAmount] = useState<any>(0);
+  const [tokenIds, setTokenIds] = useState<any>([]);
+  const [planetsCreated, setPlanetsCreated] = useState<any>([]);
+  const [planets, setTotalPlanets] = useState<any>(0);
+  const [claim, setClaim] = useState<any>(0);
+
+  const collectionSubscriptionSongbird = async () => {
+    const query = new Moralis.Query('PlanetsSongbird');
+    let subscription = await query.subscribe();
+    subscription.on('create', init);
+  };
+
+  async function init() {
+    const ownedItems = await Moralis.Cloud.run('getTotalPlanetsSongbird');
+    setTotalPlanets(ownedItems);
+  }
+  useEffect(() => {
+    collectionSubscriptionSongbird();
+
+    init();
+  });
+
+  async function fixMissing(val) {
+    const currentUser = await Moralis.User.current();
+    if (!user) {
+      return;
+    }
+    if (currentUser) {
+      const web3 = await Moralis.enableWeb3();
+
+      const sendOptionsSymbol = {
+        contractAddress: '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4',
+        functionName: 'mintedAmt',
+        abi: abi.collection,
+      };
+      let total = await Moralis.executeFunction(sendOptionsSymbol);
+      let k = 0;
+      try {
+        for (let i = k; i < parseInt(total.toString()); i++) {
+          k++;
+          const sendOptionsSymbol2 = {
+            contractAddress: '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4',
+            functionName: 'tokenByIndex',
+            abi: abi.collection,
+            params: {
+              index: i,
+            },
+          };
+
+          let tokenId = await Moralis.executeFunction(sendOptionsSymbol2);
+          console.log('index ' + JSON.stringify(i));
+
+          console.log('index ' + tokenId);
+          var getSalesCount = await Moralis.Cloud.run('getPlanetSongbirdById', {
+            tokenId: tokenId.toString(),
+            tokenAddress: '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4'.toLowerCase(),
+          });
+          console.log('index ' + JSON.stringify(getSalesCount));
+          if (getSalesCount.tokenId) {
+            const sendOptionsSymbol3 = {
+              contractAddress: '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4',
+              functionName: 'ownerOf',
+              abi: abi.collection,
+              params: {
+                tokenId: getSalesCount.tokenId,
+              },
+            };
+
+            let ownerOf = await Moralis.executeFunction(sendOptionsSymbol3);
+
+            if (ownerOf.toString().toLowerCase() === getSalesCount.owner.toLowerCase()) {
+              console.log(JSON.stringify('Is Owner'));
+            } else {
+              const Item2 = Moralis.Object.extend('PlanetsSongbird');
+              const query = await new Moralis.Query(Item2);
+              await query.equalTo('tokenId', getSalesCount.tokenId);
+
+              const result = await query.first();
+              if (result) {
+                await result.set('owner', ownerOf.toString().toLowerCase());
+                await result.save();
+              }
+              console.log(JSON.stringify('not Owner Fixed'));
+            }
+          } else {
+            const sendOptionsSymbol3 = {
+              contractAddress: '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4',
+              functionName: 'ownerOf',
+              abi: abi.collection,
+              params: {
+                tokenId: tokenId,
+              },
+            };
+            let ownerOf = await Moralis.executeFunction(sendOptionsSymbol3);
+            console.log(JSON.stringify('Not in database ' + ownerOf));
+            const Item = Moralis.Object.extend('PlanetsSongbird');
+            const queryResult = new Item();
+            queryResult.set('owner', ownerOf);
+            queryResult.set('tokenAddress', '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4'.toLowerCase());
+
+            queryResult.set('planetId', i.toString());
+            queryResult.set('name', 'Planet #'.concat(tokenId.toString()));
+            queryResult.set('description', 'Planets are the base of your empire.');
+            queryResult.set(
+              'metadataFilePath',
+              'https://ipfs.moralis.io:2053/ipfs/QmUSRueYhgvJBF7Y5znbHWbhMHKBHPaZNjjj3apEytmDdF/metadata/'
+                .concat(tokenId.toString())
+                .toString(),
+            );
+            queryResult.set('metadataFileHash', 'QmUSRueYhgvJBF7Y5znbHWbhMHKBHPaZNjjj3apEytmDdF');
+            queryResult.set(
+              'image',
+              'https://theuniverse.mypinata.cloud/ipfs/QmdBJczfNV4HHcucXxPkehqK5LG5iqU6AG3tX83WeUfdgK/'
+                .concat(tokenId.toString())
+                .concat('.png'),
+            );
+            queryResult.set('tokenId', tokenId.toString());
+
+            await queryResult.save();
+          }
+        }
+      } catch {}
+
+      return;
+    } else {
+      console.log('error no usuario');
+    }
+  }
+
+  useEffect(() => {
+    async function init() {
+      let tokenids: any[] = [];
+      if (user) {
+        console.log();
+      }
+      const ownedItems = await Moralis.Cloud.run('getAllItemsSongbird');
+      let market: any[] = [];
+
+      for (let i = 0; i < ownedItems.length; i++) {
+        const newItem: any = {
+          name: ownedItems[i].name,
+          marketId: ownedItems[i].owner,
+          tokenId: ownedItems[i].tokenId,
+          contractType: ownedItems[i].description,
+          tokenAddress: ownedItems[i].tokenAddress,
+          salesAmount: ownedItems[i].metadataFilePath,
+          image: ownedItems[i].image,
+        };
+
+        market = [...market, newItem];
+      }
+      setPlanetsCreated([...market]);
+      if (isWeb3Enabled && isAuthenticated) {
+        const provider = await Moralis.enableWeb3({ provider: 'metamask' });
+        const ethers = Moralis.web3Library;
+        console.log('res');
+
+        const signer = provider.getSigner();
+        console.log('res');
+
+        const contract = new ethers.Contract('0x3F5eE9E1632Aa3fa688875050f9C9a486bA82179', abi.rewards, provider);
+        console.log('res');
+        const transaction = await contract
+          .connect(signer)
+          .totalPools()
+          .catch(() => {
+            handleUserNotification('warning');
+          });
+        const transaction2 = await contract
+          .connect(signer)
+          .poolInfoOfId(0)
+          .catch(() => {
+            handleUserNotification('warning');
+          });
+        console.log('res4 ' + transaction2);
+
+        setClaimedAmount(Moralis.Units.FromWei(transaction2[5]));
+
+        setRewardAmount(Moralis.Units.FromWei(transaction2[4]));
+
+        const transaction66 = await contract
+          .connect(signer)
+          .rewardsOf(0, 1)
+          .catch(() => {
+            handleUserNotification('warning');
+          });
+
+        const transaction5 = await contract
+          .connect(signer)
+          .rarityRangeArr(0)
+          .catch(() => {
+            handleUserNotification('warning');
+          });
+        console.log('res4 ' + transaction5);
+      }
+    }
+    init();
+  }, [isWeb3Enabled, isAuthenticated]);
+  const claimRewards = async () => {
+    if (isWeb3Enabled && isAuthenticated) {
+      const provider = await Moralis.enableWeb3({ provider: 'metamask' });
+      const ethers = Moralis.web3Library;
+      console.log('res');
+
+      const signer = provider.getSigner();
+      console.log('res');
+      const contract = new ethers.Contract('0x3F5eE9E1632Aa3fa688875050f9C9a486bA82179', abi.rewards, provider);
+      console.log('res');
+
+      if (!user?.get('tokenAdded') && window) {
+        await window?.ethereum.request({
+          method: 'wallet_watchAsset',
+          params: {
+            type: 'ERC20', // Initially only supports ERC20, but eventually more!
+            options: {
+              address: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
+              symbol: 'DKMT',
+              decimals: 18,
+              image: 'https://theuniverse.mypinata.cloud/ipfs/Qmdh3Kv5SvK6NHNY6MUXsrKWimUF9bTLTqhRWpWrNJiatR', // if you have the image, it goes here
+            },
+          },
+        });
+
+        user?.set('tokenAdded', true);
+        user?.save();
+      }
+      let tokenids: any = [];
+
+      const ownedItems2 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user.get('ethAddress') });
+
+      console.log('ownedItems2 ' + ownedItems2);
+
+      for (let i = 0; i < ownedItems2.length; i++) {
+        tokenids = [...tokenids, ownedItems2[i].tokenId];
+        console.log(ownedItems2[i].tokenId);
+      }
+      setTokenIds(tokenids);
+      const transaction = await contract
+        .connect(signer)
+        .claimRewardsOf(tokenids)
+        .catch(() => {
+          handleNoNftNotification('warning');
+        });
+      let res = await transaction?.wait(4);
+      console.log('res' + JSON.stringify(res));
+    } else {
+      if (isWeb3Enabled) {
+        authenticate();
+      } else {
+      }
+    }
+  };
+  const mintNow = async () => {
+    console.log('res');
+
+    if (user) {
+      console.log('res');
+
+      const provider = await Moralis.enableWeb3({ provider: 'metamask' });
+      const ethers = Moralis.web3Library;
+      console.log('res');
+
+      const signer = provider.getSigner();
+      console.log('res');
+
+      const contract = new ethers.Contract('0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4', abi.collection, provider);
+      console.log('res');
+      const transaction2 = await contract.connect(signer).mintedAmt();
+
+      console.log(parseFloat(transaction2));
+      const transaction = await contract
+        .connect(signer)
+        .safeMint(1, { value: Moralis.Units.ETH(1) })
+        .catch(() => {
+          handleNoFundsNotification('warning');
+        });
+
+      const wait = await transaction?.wait();
+      try {
+        const transaction = await contract.connect(signer).mintedAmt();
+
+        console.log(JSON.stringify(transaction));
+        const Item = Moralis.Object.extend('PlanetsSongbird');
+        const queryResult = new Item();
+        queryResult.set('owner', user.get('ethAddress'));
+        queryResult.set('planetId', (parseFloat(transaction2) + 1).toString());
+        queryResult.set('tokenAddress', '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4');
+
+        queryResult.set('name', 'Planet #'.concat(parseInt(wait.logs[0].topics[3].toString(), 16).toString()));
+        queryResult.set('description', 'Planets are the base of your empire.');
+        queryResult.set(
+          'metadataFilePath',
+          'https://ipfs.moralis.io:2053/ipfs/QmUSRueYhgvJBF7Y5znbHWbhMHKBHPaZNjjj3apEytmDdF/metadata/'
+            .concat(parseInt(wait.logs[0].topics[3].toString(), 16).toString())
+            .concat('.json'),
+        );
+        queryResult.set('metadataFileHash', 'QmUSRueYhgvJBF7Y5znbHWbhMHKBHPaZNjjj3apEytmDdF');
+        queryResult.set(
+          'image',
+          'https://theuniverse.mypinata.cloud/ipfs/QmdBJczfNV4HHcucXxPkehqK5LG5iqU6AG3tX83WeUfdgK/'
+            .concat(parseInt(wait.logs[0].topics[3].toString(), 16).toString())
+            .concat('.png'),
+        );
+        queryResult.set('tokenId', parseInt(wait.logs[0].topics[3].toString(), 16).toString());
+
+        await queryResult.save();
+      } catch (e: any) {
+        console.log('error');
+      }
+    } else {
+      handleUserNotification('warning');
+    }
+  };
+
+  const dispatch = useNotification();
+
+  const handleNoNftNotification = (type: notifyType, icon?: React.ReactElement, position?: IPosition) => {
+    dispatch({
+      type,
+      message: 'Not Own an Planet',
+      title: 'You need to own a planet to claim',
+      icon,
+      position: position || 'topR',
+    });
+  };
+  const handleUserNotification = (type: notifyType, icon?: React.ReactElement, position?: IPosition) => {
+    dispatch({
+      type,
+      message: 'Enable Web3',
+      title: 'Please connect you wallet',
+      icon,
+      position: position || 'topR',
+    });
+  };
+
+  const handleNoFundsNotification = (type: notifyType, icon?: React.ReactElement, position?: IPosition) => {
+    dispatch({
+      type,
+      message: 'Insufficient funds',
+      title: 'Gas * price',
+      icon,
+      position: position || 'topR',
+    });
+  };
+
+  return (
+    <Box
+      alignItems={'flex-start'}
+      justifyContent={'flex-start'}
+      marginLeft={'20px'}
+      maxWidth={props.width * 0.8}
+      minWidth={props.width * 0.8}
+      width={props.width * 0.8}
+    >
+      <Box style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+        <Text fontSize="lg" textAlign={'center'}>
+          Patience and planning are rewarded with a strong and flexible account that can be played on and off for years.
+        </Text>
+
+        <Text fontSize="6xl" textAlign={'center'}>
+          Build, Attack, Defend, Explore, or Research.
+        </Text>
+        <Text fontSize="2xl" marginBottom={20} textAlign={'center'}>
+          Develop your space empire in the way you want.
+        </Text>
+        {props.width < 800 ? (
+          <VStack style={{ marginLeft: props.width < 600 ? '0px' : '100px' }}>
+            <PlanCard
+              description={['Game Access']}
+              descriptionTitle="Planets are the base of your empire. You start the game with one (your homeplanet), and can later colonize more of them (colonies).!"
+              footer={
+                <Button
+                  onClick={mintNow}
+                  customize={{ backgroundColor: '#000228', textColor: 'white' }}
+                  isFullWidth
+                  text="Pre-Sale Creation Cost 1000 SGB"
+                  theme="custom"
+                />
+              }
+              isActive
+              subTitle="NFT"
+              title={
+                <Box style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                  <h1 style={{ color: '#041836', fontSize: '34px' }}>
+                    <strong>PLANET </strong>
+                  </h1>
+                  <Box
+                    style={{
+                      marginTop: 20,
+                      marginBottom: 20,
+                      width: '100%',
+                      alignSelf: 'center',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Avatar
+                      image="https://theuniverse.mypinata.cloud/ipfs/QmdiPG8y5NDALbgeqfWAJjxJ3RFu46J7HikS1otQPNUzj1"
+                      isRounded
+                      size={120}
+                      theme="image"
+                    />
+                  </Box>
+                </Box>
+              }
+              isCurrentPlan={false}
+            />{' '}
+            <Box style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <Text marginLeft={'0%'} marginTop={'50px'} fontSize="3xl" textAlign={'right'}>
+                {numberWithComas(rewardAmount - claimedAmount)?.concat(' DKMT still in Rewards')}
+              </Text>
+              <Text marginLeft={'0%'} marginTop={'10px'} fontSize="2xl" textAlign={'right'}>
+                {' Planet ID define the  rarity:'}
+              </Text>
+
+              <Text marginLeft={'0%'} marginTop={'20px'} fontSize="1xl" textAlign={'right'}>
+                {'1 to 500 Legendary'}
+              </Text>
+
+              <Text marginLeft={'0%'} marginTop={'20px'} fontSize="1xl" textAlign={'right'}>
+                {'1500 to 3000 Rare'}
+              </Text>
+              <Text marginLeft={'0%'} marginTop={'20px'} fontSize="1xl" textAlign={'right'}>
+                {'3000 to 6000 Uncommon'}
+              </Text>
+
+              <Text marginLeft={'0%'} marginTop={'20px'} fontSize="1xl" textAlign={'right'}>
+                {'6000 to 10000 Common'}
+              </Text>
+
+              <Text marginLeft={'0%'} marginTop={'30px'} fontSize="2xl" textAlign={'right'}>
+                {' Claim your NFT Rewards:'}
+              </Text>
+              <Text marginTop={'0'} marginBottom={5} fontSize="6xl" textAlign={'right'}>
+                {planets.toString().concat('  DMKT')}
+              </Text>
+
+              <Box
+                style={{
+                  flex: 1,
+                  width: 200,
+                  alignSelf: 'flex-end',
+                  marginLeft: '20%',
+                  justifyContent: 'center',
+                  alignItems: 'flex-end',
+                }}
+              >
+                <Button onClick={claimRewards} isFullWidth text="Claim Rewards" theme="secondary" />
+              </Box>
+            </Box>
+          </VStack>
+        ) : (
+          <HStack
+            flexDirection={'row'}
+            style={{ flexDirection: 'row', marginLeft: props.width < 600 ? '0px' : '100px' }}
+          >
+            <PlanCard
+              description={['Game Access']}
+              descriptionTitle="Planets are the base of your empire. You start the game with one (your homeplanet), and can later colonize more of them (colonies).!"
+              footer={
+                <Button
+                  onClick={mintNow}
+                  customize={{ backgroundColor: '#000228', textColor: 'white' }}
+                  isFullWidth
+                  text="Creation Cost 1000 SGB"
+                  theme="custom"
+                />
+              }
+              isActive
+              subTitle="NFT"
+              title={
+                <Box style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                  <h1 style={{ color: '#041836', fontSize: '34px' }}>
+                    <strong>PLANET </strong>
+                  </h1>
+                  <Box
+                    style={{
+                      marginTop: 20,
+                      marginBottom: 20,
+                      width: '100%',
+                      alignSelf: 'center',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Avatar
+                      image="https://theuniverse.mypinata.cloud/ipfs/QmdiPG8y5NDALbgeqfWAJjxJ3RFu46J7HikS1otQPNUzj1"
+                      isRounded
+                      size={120}
+                      theme="image"
+                    />
+                  </Box>
+                </Box>
+              }
+              isCurrentPlan={false}
+            />
+
+            <Box style={{ flex: 1, justifyContent: 'center', paddingLeft: '20%', alignItems: 'center' }}>
+              <Text marginLeft={'0%'} marginTop={'50px'} fontSize="3xl" textAlign={'left'}>
+                {numberWithComas(rewardAmount - claimedAmount)?.concat(' DKMT still in Rewards')}
+              </Text>
+              <Text marginLeft={'0%'} marginTop={'10px'} fontSize="2xl" textAlign={'left'}>
+                {' Planet ID define the  rarity:'}
+              </Text>
+
+              <Text marginLeft={'0%'} marginTop={'20px'} fontSize="1xl" textAlign={'left'}>
+                {'1 to 500 Legendary'}
+              </Text>
+
+              <Text marginLeft={'0%'} marginTop={'20px'} fontSize="1xl" textAlign={'left'}>
+                {'1500 to 3000 Rare'}
+              </Text>
+              <Text marginLeft={'0%'} marginTop={'20px'} fontSize="1xl" textAlign={'left'}>
+                {'3000 to 6000 Uncommon'}
+              </Text>
+
+              <Text marginLeft={'0%'} marginTop={'20px'} fontSize="1xl" textAlign={'left'}>
+                {'6000 to 10000 Common'}
+              </Text>
+
+              <Text marginLeft={'0%'} marginTop={'30px'} fontSize="2xl" textAlign={'left'}>
+                {' Claim your NFT Rewards:'}
+              </Text>
+              <Text marginTop={'0'} marginBottom={5} fontSize="6xl" textAlign={'left'}>
+                {planets.toString().concat('  DMKT')}
+              </Text>
+
+              <Box style={{ flex: 1, width: 200, alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}>
+                <Button onClick={claimRewards} isFullWidth text="Claim Rewards" theme="secondary" />
+              </Box>
+            </Box>
+          </HStack>
+        )}
+
+        <Box
+          style={{
+            marginTop: 50,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 20,
+            width: props.width,
+            height: 300,
+            marginRight: props.width < 600 ? 0 : -200,
+          }}
+        >
+          <Text marginTop={'50px'} marginLeft={props.width < 600 ? 0 : 20} minW={250} fontSize="6xl" textAlign={'left'}>
+            {planets.toString().concat('/10000 Planets')}
+          </Text>
+
+          <Carousel
+            additionalTransfrom={0}
+            arrows={false}
+            autoPlay
+            autoPlaySpeed={1}
+            centerMode={false}
+            className=""
+            containerClass="container-with-dots"
+            customTransition="all 1s linear"
+            dotListClass=""
+            draggable
+            focusOnSelect={false}
+            infinite
+            itemClass=""
+            keyBoardControl
+            minimumTouchDrag={80}
+            renderButtonGroupOutside={false}
+            renderDotsOutside={false}
+            responsive={responsive}
+            showDots={false}
+            sliderClass=""
+            slidesToSlide={0}
+            swipeable
+            transitionDuration={6000}
+            rtl={false}
+          >
+            {planetsCreated.map((card: any) => {
+              return (
+                <Box>
+                  <Image rounded={20} marginLeft={10} marginRight={10} width={200} height={200} src={card.image} />
+                </Box>
+              );
+            })}
+          </Carousel>
+        </Box>
+        <Box
+          style={{
+            marginTop: 0,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 200,
+            width: props.width,
+            height: 300,
+            marginRight: props.width < 600 ? 0 : -200,
+          }}
+        >
+          <Text marginTop={0} marginLeft={props.width < 600 ? 0 : 20} minW={250} fontSize="6xl" textAlign={'left'}>
+            {'My Planets'}
+          </Text>
+
+          <Carousel
+            additionalTransfrom={0}
+            arrows={false}
+            autoPlay
+            autoPlaySpeed={1}
+            centerMode={false}
+            className=""
+            containerClass="container-with-dots"
+            customTransition="all 1s linear"
+            dotListClass=""
+            draggable
+            focusOnSelect={false}
+            infinite
+            itemClass=""
+            keyBoardControl
+            minimumTouchDrag={80}
+            renderButtonGroupOutside={false}
+            renderDotsOutside={false}
+            responsive={responsive}
+            showDots={false}
+            sliderClass=""
+            slidesToSlide={0}
+            swipeable
+            transitionDuration={6000}
+            rtl={false}
+          >
+            {planetsCreated.map((card: any) => {
+              return (
+                <Box>
+                  <Image rounded={20} marginLeft={10} marginRight={10} width={200} height={200} src={card.image} />
+                </Box>
+              );
+            })}
+          </Carousel>
+        </Box>
+        <Text marginBottom={5} fontSize="2xl" textAlign={'center'}>
+          BETA GAME RELEASE
+        </Text>
+        <FlipCountdown hideYear endAt={'2022-12-12 01:26:58'} onTimeUp={() => console.log("Time's up ⏳")} />
+
+        <Box style={{ height: 100 }} />
+        <Link href="https://discord.gg/2VG2CKFz">
+          <a target="_blank">
+            <Illustration logo="discord" />
+          </a>
+        </Link>
+
+        <Footer />
+      </Box>
+    </Box>
+  );
+};
+
+export default Home;
