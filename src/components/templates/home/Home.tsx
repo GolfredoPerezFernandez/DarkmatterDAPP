@@ -125,24 +125,24 @@ setMyPlanets([...market2])
 
    const ownedItems3 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user?.get('ethAddress') });
 
-   for (let i = 0; i < ownedItems3.length; i++) {
     
-   const transactionRewardsOf =  contract
-   .connect(signer)
-   .rewardsOf(0,ownedItems3[i].tokenId)
-   .catch(() => {
-     handleUserNotification('warning');
-   });
-
-   rewardsToClaim2=Math.trunc(parseFloat(Moralis.Units.FromWei(transactionRewardsOf[1].toString())))+rewardsToClaim2
-     tokenids = [...tokenids, ownedItems3[i].tokenId];
+   await Promise.all(ownedItems2.map(async (item:any,index:any) => {
+    const transactionRewardsOf = await contract
+    .connect(signer)
+    .rewardsOf(0,ownedItems2[index].tokenId)
+   console.log(index)
+    rewardsToClaim2=rewardsToClaim2+Math.trunc(parseFloat(Moralis.Units.FromWei(transactionRewardsOf[1].toString())))
+   
+   }));
     
-   }
    
 setRewardsToClaim(rewardsToClaim2.toString())
       }
     }
-    init();
+    if(isWeb3Enabled){
+
+      init();
+    }
   }, [isWeb3Enabled,isAuthenticated ]);
   const claimRewards = async () => {
     if (isWeb3Enabled && isAuthenticated) {
@@ -259,16 +259,15 @@ setRewardsToClaim(0)
    let rewardsToClaim2 = 0;
 
    const ownedItems2 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user?.get('ethAddress') });
-
-   for (let i = 0; i < ownedItems2.length; i++) {
-    
-   const transactionRewardsOf =  contract2
-   .connect(signer)
-   .rewardsOf(0,ownedItems2[i].tokenId)
    
-   rewardsToClaim2=rewardsToClaim2+Math.trunc(parseFloat(Moralis.Units.FromWei(transactionRewardsOf[1].toString())))
-     tokenids = [...tokenids, ownedItems2[i].tokenId];
-   }
+   await Promise.all(ownedItems2.map(async (item:any,index:any) => {
+    const transactionRewardsOf = await contract2
+    .connect(signer)
+    .rewardsOf(0,ownedItems2[index].tokenId)
+    rewardsToClaim2=rewardsToClaim2+Math.trunc(parseFloat(Moralis.Units.FromWei(transactionRewardsOf[1].toString())))
+    tokenids = [...tokenids, ownedItems2[index].tokenId];
+   }));
+
    
 
 setRewardsToClaim(rewardsToClaim2.toString())

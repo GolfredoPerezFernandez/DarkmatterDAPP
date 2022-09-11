@@ -4,7 +4,7 @@ import { ConnectButton } from '../ConnectButton';
 import { Menu as Menu2 } from '@web3uikit/icons';
 import { Typography } from '@web3uikit/core';
 
-import { Link, Popover, PopoverContent, PopoverTrigger, Stack, useColorModeValue, Text } from '@chakra-ui/react';
+import { Link, Popover, PopoverContent, PopoverTrigger, Stack, useColorModeValue, Text,Image } from '@chakra-ui/react';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { FC, useEffect, useState } from 'react';
 import NextLink from 'next/link';
@@ -80,6 +80,14 @@ const Header = (props: any) => {
                 </Menu>
               </Box>
             )}
+            <Image
+      src={'https://cdn.discordapp.com/attachments/907590324627595284/1001294615099486208/mint-live.png'}
+      marginLeft={50}
+      height={'40px'}
+      width={50}
+      alt="Ultimate"
+    />
+            
           </HStack>
         </Flex>
       </Container>
