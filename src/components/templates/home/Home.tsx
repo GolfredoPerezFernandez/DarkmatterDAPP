@@ -62,7 +62,7 @@ const [rewardsToClaim,setRewardsToClaim]=useState<any>(0);
   useEffect(() => {
     async function init() {
       
-  const ownedItems2 = await Moralis.Cloud.run('getPlanetsSongbird',{owner:user.get("ethAddress")});
+  const ownedItems2 = await Moralis.Cloud.run('getPlanetsSongbird',{owner:user?.get("ethAddress")});
   let market2: any[] = [];
 
   for (let i = 0; i < ownedItems2.length; i++) {
@@ -273,7 +273,7 @@ setRewardsToClaim(0)
 
 setRewardsToClaim(rewardsToClaim2.toString())
       } catch (e: any) {
-        console.log('error'.concate.message);
+        console.log('error'.concat(e.message));
       }
     } else {
       handleUserNotification('warning');
