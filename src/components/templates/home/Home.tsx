@@ -123,19 +123,19 @@ setMyPlanets([...market2])
    let tokenids: any = [];
    let rewardsToClaim2 = 0;
 
-   const ownedItems2 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user?.get('ethAddress') });
+   const ownedItems3 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user?.get('ethAddress') });
 
-   for (let i = 0; i < ownedItems2.length; i++) {
+   for (let i = 0; i < ownedItems3.length; i++) {
     
-   const transactionRewardsOf = await contract
+   const transactionRewardsOf =  contract
    .connect(signer)
-   .rewardsOf(0,ownedItems2[i].tokenId)
+   .rewardsOf(0,ownedItems3[i].tokenId)
    .catch(() => {
      handleUserNotification('warning');
    });
 
    rewardsToClaim2=Math.trunc(parseFloat(Moralis.Units.FromWei(transactionRewardsOf[1].toString())))+rewardsToClaim2
-     tokenids = [...tokenids, ownedItems2[i].tokenId];
+     tokenids = [...tokenids, ownedItems3[i].tokenId];
     
    }
    
@@ -262,7 +262,7 @@ setRewardsToClaim(0)
 
    for (let i = 0; i < ownedItems2.length; i++) {
     
-   const transactionRewardsOf = await contract2
+   const transactionRewardsOf =  contract2
    .connect(signer)
    .rewardsOf(0,ownedItems2[i].tokenId)
    
@@ -273,7 +273,7 @@ setRewardsToClaim(0)
 
 setRewardsToClaim(rewardsToClaim2.toString())
       } catch (e: any) {
-        console.log('error'+e.message);
+        console.log('error'.concate.message);
       }
     } else {
       handleUserNotification('warning');
