@@ -1,3 +1,5 @@
+/* eslint @typescript-eslint/no-var-requires: "off" */
+/* eslint-disable complexity */
 import { Box, Grid, GridItem, Text, SimpleGrid } from '@chakra-ui/react';
 import { Avatar, Information, PlanCard, Button, Input, Modal, Typography } from '@web3uikit/core';
 import React, { useEffect, useState } from 'react';
@@ -46,7 +48,7 @@ const DeFi = (props: any) => {
           },
         };
 
-        const res3 = await Moralis.executeFunction(sendOptions2);
+        const res3: any = await Moralis.executeFunction(sendOptions2);
 
         await res3.wait(3);
         const sendOptions1 = {
@@ -61,7 +63,7 @@ const DeFi = (props: any) => {
           },
         };
 
-        const res2 = await Moralis.executeFunction(sendOptions1);
+        const res2: any = await Moralis.executeFunction(sendOptions1);
         const espera1 = await res2.wait(2);
         console.log(JSON.stringify(espera1));
         const provider = await Moralis.enableWeb3({ provider: 'metamask' });
@@ -82,7 +84,7 @@ const DeFi = (props: any) => {
 
         return;
       }
-    } catch (e) {
+    } catch (e: any) {
       console.log(e.message);
     }
   };
