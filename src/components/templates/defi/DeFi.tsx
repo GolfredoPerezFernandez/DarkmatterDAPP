@@ -54,7 +54,7 @@ const DeFi = (props: any) => {
       bgPosition={'center'}
       bgRepeat={'no-repeat'}
       width="full"
-      height={props.height * 2}
+      height={props.height * 1.5}
       bgImg={'https://theuniverse.mypinata.cloud/ipfs/QmeJk3D3P6abctHSzezLhBYVhX5o9DSySfpJ3W17Pu9buM'}
       bgClip={'border-box'}
     >
@@ -95,7 +95,7 @@ const DeFi = (props: any) => {
                       />
                     }
                     isActive
-                    subTitle="ERC20 TOKEN"
+                    subTitle="BUY ERC20 TOKEN"
                     title={
                       <h1 style={{ color: '#041836', fontSize: '34px' }}>
                         <strong>DARKMATTER </strong>
@@ -126,84 +126,6 @@ const DeFi = (props: any) => {
                     </Text>
                     <Text fontSize="lg" marginLeft={'4%'} textAlign={'center'}>
                       GENERATE MORE DARK MATTER WITH STAKING
-                    </Text>
-                    <Input
-                      style={{
-                        marginTop: 20,
-                        marginLeft: props.width < 800 ? '5%' : '22%',
-                      }}
-                      label="Amount To Stake"
-                      name="Test number Input"
-                      type="number"
-                    />
-                    <Box
-                      style={{
-                        marginLeft: '26%',
-                        marginTop: 10,
-                        alignSelf: 'center',
-                        width: '50%',
-                      }}
-                    >
-                      <Button isFullWidth={true} color="green" text="Stake Dark Matter" theme="colored" />
-                    </Box>
-                  </Box>
-                </SimpleGrid>
-              </GridItem>
-              <GridItem>
-                <SimpleGrid
-                  minChildWidth="220px"
-                  spacing="40px"
-                  w={props.width * 0.7}
-                  mt={5}
-                  paddingTop={20}
-                  paddingLeft={props.width < 600 ? 0 : 200}
-                  justifyContent={'space-between'}
-                  alignItems={'space-between'}
-                >
-                  <PlanCard
-                    description={['ER20 Staking']}
-                    descriptionTitle=" Dark matter can be used to purchase 10%, 20% or 30% resource increase and also to halve/finish building upgrades, researching and also ships/defences being built"
-                    footer={
-                      <Button
-                        onClick={() => handleOpen(true)}
-                        customize={{ backgroundColor: '#000228', textColor: 'white' }}
-                        isFullWidth
-                        text="0.005 SGB per DKMT"
-                        theme="custom"
-                      />
-                    }
-                    isActive
-                    subTitle="ERC20 TOKEN"
-                    title={
-                      <h1 style={{ color: '#041836', fontSize: '34px' }}>
-                        <strong>DARKMATTER </strong>
-                        <Box
-                          style={{
-                            marginTop: 10,
-                            marginBottom: 10,
-                            width: '100%',
-                            alignSelf: 'center',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                          }}
-                        >
-                          <Avatar
-                            image="https://theuniverse.mypinata.cloud/ipfs/Qmdh3Kv5SvK6NHNY6MUXsrKWimUF9bTLTqhRWpWrNJiatR"
-                            isRounded
-                            size={140}
-                            theme="image"
-                          />
-                        </Box>
-                      </h1>
-                    }
-                    isCurrentPlan={false}
-                  />
-                  <Box style={{ marginTop: 100, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text fontSize="4xl" marginBottom={4} textAlign={'center'}>
-                      Stake Your Planets
-                    </Text>
-                    <Text fontSize="lg" marginLeft={'4%'} textAlign={'center'}>
-                      GENERATE MORE DARK MATTER WITH PLANET STAKING
                     </Text>
                     <Input
                       style={{
