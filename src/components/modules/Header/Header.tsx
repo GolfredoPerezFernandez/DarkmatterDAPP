@@ -41,7 +41,7 @@ const Header = (props: any) => {
         <Flex align="center" marginLeft={0} justify="space-between">
           <MoralisLogo />
           <HStack>
-            {!user ? null : (
+            {!user ? null : props.width < 800 ? null : (
               <Text fontSize="1xl" marginLeft={20} textAlign={'right'}>
                 {balance === '' ? '' : balance.concat(' DKMT')}
               </Text>
@@ -63,7 +63,12 @@ const Header = (props: any) => {
                       </MenuItem>
                     </MenuGroup>
                     <MenuGroup>
-                      <Box backgroundColor={'#000228'}>
+                      <Box style={{ justifyContent: 'center', alignItems: 'center' }} backgroundColor={'#000228'}>
+                        {!user ? null : (
+                          <Text fontSize="1xl" marginRight={10} textAlign={'right'}>
+                            {balance === '' ? '' : balance.concat(' DKMT')}
+                          </Text>
+                        )}
                         {NAV_LINKS.map((link) => (
                           <MenuItem backgroundColor={'#000228'}>
                             <NavItem2 key={`link-${link.label}`} {...link} />

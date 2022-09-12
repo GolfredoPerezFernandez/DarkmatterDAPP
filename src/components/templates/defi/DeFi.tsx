@@ -11,7 +11,6 @@ const DeFi = (props: any) => {
 
   const [burned, setBurned] = React.useState<any>(0);
   const [circulating, setCirculating] = React.useState<any>(0);
-  const [setTotalSupply] = React.useState<any>(0);
 
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -36,8 +35,6 @@ const DeFi = (props: any) => {
         parseFloat(await Moralis.Units.FromWei(totalSupply.toString())) -
         parseFloat(await Moralis.Units.FromWei(balanceOf.toString()));
       setCirculating(val);
-
-      setTotalSupply(parseFloat(totalSupply));
     }
     if (isWeb3Enabled) {
       init();
@@ -292,6 +289,8 @@ const DeFi = (props: any) => {
                           alignSelf: 'center',
                           marginLeft: props.width < 800 ? 0 : 20,
                           marginTop: 20,
+                          color: 'white',
+
                           marginBottom: 20,
                         }}
                         onChange={handleChanges('amount')}
@@ -376,16 +375,16 @@ const DeFi = (props: any) => {
 
             {open === true ? (
               <Modal
-                cancelText="Discard Changes"
+                cancelText="Close"
                 id="regular"
-                okText="Save Changes"
+                okText="Buy Tokens"
                 onCancel={() => setOpen(false)}
                 onCloseButtonPressed={() => setOpen(false)}
                 onOk={handleBuy}
                 title={
                   <div style={{ display: 'flex', gap: 10 }}>
                     <Typography color="#68738D" variant="h3">
-                      Edit Nickname
+                      Buy Dark Matter
                     </Typography>
                   </div>
                 }
