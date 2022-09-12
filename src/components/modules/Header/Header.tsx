@@ -48,9 +48,10 @@ const Header = (props: any) => {
         <Flex align="center" marginLeft={0} justify="space-between">
           <MoralisLogo />
           <HStack>
-            <Text fontSize="1xl" marginLeft={20} textAlign={'right'}>
+            {!user?null: <Text fontSize="1xl" marginLeft={20} textAlign={'right'}>
               {balance === '' ? '' : balance.concat(' DKMT')}
-            </Text>
+            </Text>}
+           
 
             <Box width="40px" />
             {props.width > 900 ? (
@@ -80,6 +81,7 @@ const Header = (props: any) => {
                 </Menu>
               </Box>
             )}
+            
             <Image
       src={'https://cdn.discordapp.com/attachments/907590324627595284/1001294615099486208/mint-live.png'}
       marginLeft={50}
