@@ -115,7 +115,7 @@ setMyPlanets([...market2])
           .catch(() => {
             handleUserNotification('warning');
           });
-let rewa=Moralis.Units.FromWei(transaction2[4])
+const rewa=Moralis.Units.FromWei(transaction2[4])
 if(parseFloat(rewa)===0){
 
   setRewardAmount(parseFloat(rewa));
@@ -188,7 +188,7 @@ setRewardsToClaim(rewardsToClaim2.toString())
         .claimRewardsOf(tokenids)
         .catch( () => {
           handleNoNftNotification('warning');
-        }).then( ()=> {
+        }).then( () => {
           
 setRewardsToClaim(0)
         });
