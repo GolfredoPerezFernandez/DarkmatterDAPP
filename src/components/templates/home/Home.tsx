@@ -485,7 +485,7 @@ setRewardsToClaim(rewardsToClaim2.toString())
 
             <Box style={{ flex: 1, justifyContent: 'center', paddingLeft: '20%', alignItems: 'center' }}>
               <Text marginLeft={'0%'} marginTop={'50px'} fontSize="3xl" textAlign={'left'}>
-                {numberWithComas(rewardAmount - claimedAmount)?.concat(' DKMT in Rewards')}
+                {"5.000.0000".concat(' DKMT in Rewards')}
               </Text>
               <Text marginLeft={'0%'} marginTop={'10px'} fontSize="2xl" textAlign={'left'}>
                 {' Planet ID define the  rarity:'}
