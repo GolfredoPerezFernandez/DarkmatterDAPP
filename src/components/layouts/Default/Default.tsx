@@ -94,6 +94,7 @@ const Default: FC<{ children: ReactNode; pageName: string; width: number; height
           maxW={width}
           width={1900}
           style={{ flex: 1 }}
+          marginTop={100}
           as="main"
         >
           {children}
