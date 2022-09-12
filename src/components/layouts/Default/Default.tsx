@@ -1,5 +1,5 @@
 import { FC, ReactNode } from 'react';
-import { Box, Container, Grid, GridItem, List, ListItem, VStack } from '@chakra-ui/react';
+import { Container, Grid, GridItem, List, ListItem, VStack } from '@chakra-ui/react';
 import { Header } from 'components/modules';
 import Head from 'next/head';
 
