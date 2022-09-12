@@ -54,6 +54,7 @@ const DeFi = (props: any) => {
       bgPosition={'center'}
       bgRepeat={'no-repeat'}
       width="full"
+      height={props.height * 2}
       bgImg={'https://theuniverse.mypinata.cloud/ipfs/QmeJk3D3P6abctHSzezLhBYVhX5o9DSySfpJ3W17Pu9buM'}
       bgClip={'border-box'}
     >

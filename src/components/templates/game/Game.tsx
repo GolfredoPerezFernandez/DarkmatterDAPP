@@ -5,20 +5,22 @@ import 'react-alice-carousel/lib/alice-carousel.css';
 const Game = (props: any) => {
   return (
     <Box
-      bgPosition={'center'}
-      bgRepeat={'no-repeat'}
-      width="full"
-      bgImg={'https://theuniverse.mypinata.cloud/ipfs/QmT6ahzJuF7sGyqSLs5WtXfYgANGi13SqUaEAC3rNucQAp'}
-      bgClip={'border-box'}
+      alignItems={'flex-start'}
+      justifyContent={'flex-start'}
+      marginLeft={'40px'}
+      minHeight={props.height}
+      maxWidth={props.width * 0.8}
+      minWidth={props.width * 0.8}
+      width={props.width * 0.8}
     >
       <Box
-        alignItems={'flex-start'}
-        justifyContent={'flex-start'}
-        marginLeft={'40px'}
-        minHeight={props.height}
-        maxWidth={props.width * 0.8}
-        minWidth={props.width * 0.8}
-        width={props.width * 0.8}
+        bgPosition={'center'}
+        marginTop={100}
+        minHeight={props.height * 2}
+        bgRepeat={'no-repeat'}
+        width="full"
+        bgImg={'https://theuniverse.mypinata.cloud/ipfs/QmT6ahzJuF7sGyqSLs5WtXfYgANGi13SqUaEAC3rNucQAp'}
+        bgClip={'border-box'}
       >
         <Text alignSelf={'center'} textAlign="center" fontSize="6xl">
           DarkMatter Review
