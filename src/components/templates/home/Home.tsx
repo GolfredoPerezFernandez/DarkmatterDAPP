@@ -98,7 +98,7 @@ const Home = (props: any) => {
       }
       setPlanetsCreated([...market]);
       if (isWeb3Enabled && isAuthenticated) {
-        const provider = await Moralis.enableWeb3({ provider: 'metamask' });
+        const provider = await Moralis.enableWeb3();
         const ethers = Moralis.web3Library;
 
         const signer = provider.getSigner();
@@ -124,7 +124,6 @@ const Home = (props: any) => {
         await Promise.all(
           ownedItems3.map(async (item: any, index: any) => {
             const transactionRewardsOf = await contract.connect(signer).rewardsOf(0, ownedItems2[index].tokenId);
-            console.log(index);
             rewardsToClaim2 =
               rewardsToClaim2 + Math.trunc(parseFloat(Moralis.Units.FromWei(transactionRewardsOf[1].toString())));
           }),
@@ -200,7 +199,7 @@ const Home = (props: any) => {
 
       const transaction = await contract
         .connect(signer)
-        .safeMint(1, { value: Moralis.Units.ETH(1) })
+        .safeMint(1, { value: Moralis.Units.ETH(1200) })
         .catch(() => {
           handleNoFundsNotification('warning');
         });
@@ -352,7 +351,7 @@ const Home = (props: any) => {
                 footer={
                   <Button
                     onClick={mintNow}
-                    disabled={!isAuthenticated}
+                    disabled={user ? false : true}
                     customize={{ backgroundColor: '#000228', textColor: 'white' }}
                     isFullWidth
                     text="Pre-Sale Creation Cost 1000 SGB"
@@ -422,10 +421,10 @@ const Home = (props: any) => {
                     {rewardsToClaim.toString().concat('  DKMT')}
                   </Text>
                   <Button
-                    disabled={rewardsToClaim <= 0}
+                    disabled={rewardsToClaim <= 0 || user ? false : true}
                     onClick={claimRewards}
-                    isFullWidth
                     text="Claim Rewards"
+                    isFullWidth
                     theme="secondary"
                   />
 
@@ -453,7 +452,7 @@ const Home = (props: any) => {
                 footer={
                   <Button
                     onClick={mintNow}
-                    disabled={!isAuthenticated}
+                    disabled={user ? false : true}
                     customize={{ backgroundColor: '#000228', textColor: 'white' }}
                     isFullWidth
                     text="Creation Cost 1200 SGB"
@@ -526,7 +525,7 @@ const Home = (props: any) => {
                   style={{ flex: 1, width: 200, alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}
                 >
                   <Button
-                    disabled={rewardsToClaim <= 0}
+                    disabled={rewardsToClaim <= 0 || user ? false : true}
                     onClick={claimRewards}
                     isFullWidth
                     text="Claim Rewards"

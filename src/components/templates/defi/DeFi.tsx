@@ -7,44 +7,77 @@ import { useMoralis } from 'react-moralis';
 import numberWithCommas from 'utils/numberWithComas';
 
 const DeFi = (props: any) => {
-  const { Moralis, user, isWeb3Enabled, isWeb3EnableLoading, isAuthenticated, enableWeb3 } = useMoralis();
+  const { Moralis, user, isWeb3Enabled, logout, isAuthenticated } = useMoralis();
+
+  const [burned, setBurned] = React.useState<any>(0);
+  const [circulating, setCirculating] = React.useState<any>(0);
+  const [setTotalSupply] = React.useState<any>(0);
+
   const [open, setOpen] = useState(false);
   useEffect(() => {
     async function init() {
-      if (!isWeb3Enabled && !isWeb3EnableLoading) {
-        await enableWeb3();
-      } else if (user) {
-        const provider = await Moralis.enableWeb3({ provider: 'metamask' });
-        const ethers = Moralis.web3Library;
+      const options3 = {
+        contractAddress: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
+        functionName: 'balanceOf',
+        abi: erc20ABI,
+        params: { account: '0x000000000000000000000000000000000000dead' },
+      };
+      const balanceOf: any = await Moralis.executeFunction(options3);
 
-        const signer = provider.getSigner();
+      setBurned(parseFloat(balanceOf));
 
-        const contract = new ethers.Contract('0xcC5413858EE7987D14184a1616403E445651D802', masterDark, provider);
+      const options4 = {
+        contractAddress: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
+        functionName: 'totalSupply',
+        abi: erc20ABI,
+      };
+      const totalSupply: any = await Moralis.executeFunction(options4);
+      const val: any =
+        parseFloat(await Moralis.Units.FromWei(totalSupply.toString())) -
+        parseFloat(await Moralis.Units.FromWei(balanceOf.toString()));
+      setCirculating(val);
 
-        const transaction = await contract.connect(signer).userInfo(0, user?.get('ethAddress'));
-
-        const pen = await contract.connect(signer).pending(0, user?.get('ethAddress'));
-
-        setPending(Moralis.Units.FromWei(pen));
-        setDeposit(Moralis.Units.FromWei(transaction.amount));
-      }
+      setTotalSupply(parseFloat(totalSupply));
     }
-    init();
-  }, [isAuthenticated, isWeb3Enabled]);
+    if (isWeb3Enabled) {
+      init();
+    } else {
+      logout();
+    }
 
-  const handleClaim = async () => {
+    Moralis.onAccountChanged(async () => {
+      logout();
+    });
+  }, [isWeb3Enabled, isAuthenticated]);
+
+  const handleUpdate = async () => {
+    const provider = await Moralis.enableWeb3({ provider: 'metamask' });
+    const ethers = Moralis.web3Library;
+
+    const signer = provider.getSigner();
+
+    const contract = new ethers.Contract('0xcC5413858EE7987D14184a1616403E445651D802', masterDark, provider);
+
+    const transaction = await contract.connect(signer).userInfo(0, user?.get('ethAddress'));
+
+    const pen = await contract.connect(signer).pending(0, user?.get('ethAddress'));
+
+    setPending(Moralis.Units.FromWei(pen));
+    setDeposit(Moralis.Units.FromWei(transaction.amount));
+  };
+
+  const handleWithdraw = async () => {
     const sendOptions1 = {
       contractAddress: '0xcC5413858EE7987D14184a1616403E445651D802',
       functionName: 'withdraw',
       abi: masterDark,
-      awaitReceipt: true, // should be switched to false
+      awaitReceipt: true,
       params: {
         _pid: 0,
-        _amount: 0,
+        _amount: Moralis.Units.ETH(deposit),
       },
     };
-    console.log('endSale');
-    let res2: any = await Moralis.executeFunction(sendOptions1);
+    const res2: any = await Moralis.executeFunction(sendOptions1);
     await res2.wait(2);
     const provider = await Moralis.enableWeb3({ provider: 'metamask' });
     const ethers = Moralis.web3Library;
@@ -57,8 +90,33 @@ const DeFi = (props: any) => {
 
     const pen = await contract.connect(signer).pending(0, user?.get('ethAddress'));
 
-    console.log(pen);
-    console.log(transaction.amount);
+    setPending(Moralis.Units.FromWei(pen));
+    setDeposit(Moralis.Units.FromWei(transaction.amount));
+  };
+  const handleClaim = async () => {
+    const sendOptions1 = {
+      contractAddress: '0xcC5413858EE7987D14184a1616403E445651D802',
+      functionName: 'withdraw',
+      abi: masterDark,
+      awaitReceipt: true,
+      params: {
+        _pid: 0,
+        _amount: 0,
+      },
+    };
+    const res2: any = await Moralis.executeFunction(sendOptions1);
+    await res2.wait(2);
+    const provider = await Moralis.enableWeb3({ provider: 'metamask' });
+    const ethers = Moralis.web3Library;
+
+    const signer = provider.getSigner();
+
+    const contract = new ethers.Contract('0xcC5413858EE7987D14184a1616403E445651D802', masterDark, provider);
+
+    const transaction = await contract.connect(signer).userInfo(0, user?.get('ethAddress'));
+
+    const pen = await contract.connect(signer).pending(0, user?.get('ethAddress'));
+
     setPending(Moralis.Units.FromWei(pen));
     setDeposit(Moralis.Units.FromWei(transaction.amount));
   };
@@ -66,44 +124,26 @@ const DeFi = (props: any) => {
     console.log('endSale');
     try {
       if (user) {
-        console.log(parseFloat(values.amount));
-        console.log('endSale');
-        const sendOptions2 = {
-          contractAddress: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
-          functionName: 'approve',
-          abi: erc20ABI,
-          awaitReceipt: true,
-          params: {
-            spender: '0xcC5413858EE7987D14184a1616403E445651D802',
-            amount: Moralis.Units.ETH(values.amount),
-          },
-        };
-
-        const res3: any = await Moralis.executeFunction(sendOptions2);
-
-        await res3.wait(3);
-        const sendOptions1 = {
-          contractAddress: '0xcC5413858EE7987D14184a1616403E445651D802',
-          functionName: 'deposit',
-          abi: masterDark,
-          awaitReceipt: true,
-          params: {
-            pid: 0,
-            amount: Moralis.Units.ETH(values.amount),
-            to: user.get('ethAddress'),
-          },
-        };
-
-        const res2: any = await Moralis.executeFunction(sendOptions1);
-        const espera1 = await res2.wait(2);
-        console.log(JSON.stringify(espera1));
         const provider = await Moralis.enableWeb3({ provider: 'metamask' });
         const ethers = Moralis.web3Library;
 
         const signer = provider.getSigner();
 
+        console.log(parseFloat(values.amount));
+        console.log('endSale');
+
+        const contract0 = new ethers.Contract('0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6', erc20ABI, provider);
+        const res0 = await contract0
+          .connect(signer)
+          .approve('0xcC5413858EE7987D14184a1616403E445651D802', Moralis.Units.ETH(values.amount));
+
+        await res0.wait(3);
+
         const contract = new ethers.Contract('0xcC5413858EE7987D14184a1616403E445651D802', masterDark, provider);
 
+        const res = await contract.connect(signer).deposit(0, Moralis.Units.ETH(values.amount));
+
+        await res.wait(3);
         const transaction = await contract.connect(signer).userInfo(0, user?.get('ethAddress'));
 
         const pen = await contract.connect(signer).pending(0, user?.get('ethAddress'));
@@ -124,9 +164,6 @@ const DeFi = (props: any) => {
   const handleBuy = async () => {
     try {
       if (user && isWeb3Enabled && isAuthenticated) {
-        console.log(user.get('ethAddress'));
-        console.log(Moralis.Units.ETH(parseFloat(values.amount) * 0.005));
-        console.log(parseFloat(values.amount));
         const sendOptions1 = {
           contractAddress: '0xd3d74F421713996394e3A8EE1036c8130b8140d3',
           functionName: 'buyTokens',
@@ -138,7 +175,6 @@ const DeFi = (props: any) => {
           },
         };
 
-        console.log(JSON.stringify('hola'));
         await Moralis.executeFunction(sendOptions1);
         return;
       }
@@ -203,6 +239,7 @@ const DeFi = (props: any) => {
                     descriptionTitle=" Dark matter can be used to purchase 10%, 20% or 30% resource increase and also to halve/finish building upgrades, researching and also ships/defences being built"
                     footer={
                       <Button
+                        disabled={user ? false : true}
                         onClick={() => handleOpen(true)}
                         customize={{ backgroundColor: '#000228', textColor: 'white' }}
                         isFullWidth
@@ -264,6 +301,7 @@ const DeFi = (props: any) => {
                         type="number"
                       />
                       <Button
+                        disabled={user ? false : true}
                         onClick={handleDeposit}
                         isFullWidth={true}
                         color="blue"
@@ -276,11 +314,32 @@ const DeFi = (props: any) => {
                       <Text mt={2} mb={5} fontSize="lg" marginLeft={'4%'} textAlign={'center'}>
                         {'REWARDS: '.concat(pending).concat(' DKMT')}
                       </Text>
+                      {parseFloat(pending) > 0 ? (
+                        <Button
+                          disabled={user ? false : true}
+                          onClick={handleClaim}
+                          isFullWidth={true}
+                          color="blue"
+                          text="Claim Rewards"
+                          theme="colored"
+                        />
+                      ) : null}
+                      <Box style={{ height: 10 }} />
                       <Button
-                        onClick={handleClaim}
+                        disabled={user ? false : true}
+                        onClick={handleUpdate}
                         isFullWidth={true}
                         color="blue"
-                        text="Claim Rewards"
+                        text="Update Rewards"
+                        theme="colored"
+                      />
+                      <Box style={{ height: 10 }} />
+                      <Button
+                        disabled={user ? false : true}
+                        onClick={handleWithdraw}
+                        isFullWidth={true}
+                        color="blue"
+                        text="Withdraw All"
                         theme="colored"
                       />
                     </Box>
@@ -299,21 +358,17 @@ const DeFi = (props: any) => {
                 >
                   <Box height="100px">
                     <Information
-                      information={numberWithCommas(props.circulating)?.concat(' DKMT')}
+                      information={numberWithCommas(circulating)?.concat(' DKMT')}
                       topic="Circulating Supply"
                     />
                   </Box>
 
                   <Box height="100px">
-                    <Information information="10.000.000.000 DKMT" topic="Total Supply" />
+                    <Information information="10.000.000.000 DKMT" topic="Max Supply" />
                   </Box>
 
                   <Box height="100px">
-                    <Information information={'+ '.concat(numberWithCommas(props.holders))} topic="Holders" />
-                  </Box>
-
-                  <Box height="100px">
-                    <Information information="10000 DKMT" topic="Burned" />
+                    <Information information={numberWithCommas(burned)?.concat(' DKMT')} topic="Burned" />
                   </Box>
                 </SimpleGrid>
               </GridItem>

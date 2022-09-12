@@ -16,27 +16,22 @@ import { useMoralis } from 'react-moralis';
 const Header = (props: any) => {
   const { user, isWeb3Enabled, Moralis, isAuthenticated, isWeb3EnableLoading } = useMoralis();
   const [balance, setBalance] = useState('');
+
   useEffect(() => {
     async function init() {
-      const CHAIN2 = await Moralis.chainId;
-      if (CHAIN2 !== '0x13') {
-        await Moralis.switchNetwork('0x13');
-      }
-      if (CHAIN2 === '0x13') {
-        const sendOptionsSymbol3 = {
-          contractAddress: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
-          functionName: 'balanceOf',
-          abi: collection,
-          params: {
-            account: user?.get('ethAddress'),
-          },
-        };
-        const ownerOf = await Moralis.executeFunction(sendOptionsSymbol3);
+      const sendOptionsSymbol3 = {
+        contractAddress: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
+        functionName: 'balanceOf',
+        abi: collection,
+        params: {
+          account: user?.get('ethAddress'),
+        },
+      };
+      const ownerOf = await Moralis.executeFunction(sendOptionsSymbol3);
 
-        setBalance(Math.round(parseFloat(Moralis.Units.FromWei(ownerOf.toString()))).toString());
-      }
+      setBalance(Math.round(parseFloat(Moralis.Units.FromWei(ownerOf.toString()))).toString());
     }
-    if (isWeb3Enabled) {
+    if (isWeb3Enabled && isAuthenticated && user) {
       init();
     }
   }, [user, isWeb3Enabled, isAuthenticated, isWeb3EnableLoading]);

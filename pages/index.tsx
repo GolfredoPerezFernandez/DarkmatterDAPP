@@ -6,28 +6,16 @@ import { useEffect } from 'react';
 import { useMoralis } from 'react-moralis';
 
 const HomePage: NextPage<any> = (props: any) => {
-
-  const { enableWeb3,logout, isWeb3Enabled ,chainId} = useMoralis();
-  
-  useEffect(() => {
-    if (!isWeb3Enabled) {
-      enableWeb3();
-    }
-  }, [isWeb3Enabled]);
+  const { logout, chainId } = useMoralis();
 
   useEffect(() => {
-    
-    async function init(){ 
-    
-    if(chainId!=="0x13"){
-
-      await logout()
+    async function init() {
+      if (chainId !== '0x13') {
+        await logout();
+      }
     }
-    
-   }
-   
-   init()
 
+    init();
   }, [chainId]);
   return (
     <Default width={props.width} height={props.height} {...props} pageName="Home">
