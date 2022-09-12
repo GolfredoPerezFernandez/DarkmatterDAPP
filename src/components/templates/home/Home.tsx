@@ -186,9 +186,9 @@ setRewardsToClaim(rewardsToClaim2.toString())
      await contract
         .connect(signer)
         .claimRewardsOf(tokenids)
-        .catch(() => {
+        .catch( () => {
           handleNoNftNotification('warning');
-        }).then(()=>{
+        }).then( ()=> {
           
 setRewardsToClaim(0)
         });
@@ -422,9 +422,8 @@ setRewardsToClaim(rewardsToClaim2.toString())
 <Text marginTop={'0'} marginBottom={5} fontSize="6xl" textAlign={'right'}>
                 {rewardsToClaim.toString().concat('  DKMT')}
               </Text>
-              {rewardsToClaim>0?
-                 <Button  onClick={claimRewards} isFullWidth text="Claim Rewards" theme="secondary" />
-                 :null}
+                 <Button  disabled={rewardsToClaim <= 0} onClick={claimRewards} isFullWidth text="Claim Rewards" theme="secondary" />
+               
               <Box
                 style={{
                   flex: 1,
@@ -517,10 +516,9 @@ setRewardsToClaim(rewardsToClaim2.toString())
                 {rewardsToClaim.toString().concat('  DKMT')}
               </Text>
               
-                  {rewardsToClaim>0?
               <Box style={{ flex: 1, width: 200, alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}>
-                <Button onClick={claimRewards} isFullWidth text="Claim Rewards" theme="secondary" />
-              </Box>: null}
+                <Button disabled={rewardsToClaim <= 0} onClick={claimRewards} isFullWidth text="Claim Rewards" theme="secondary" />
+              </Box>
             </Box>
           </HStack>
         )}
