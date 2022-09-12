@@ -88,25 +88,17 @@ const Default: FC<{ children: ReactNode; pageName: string; width: number; height
         justifyContent={'center'}
         area={'main'}
       >
-        <Box
-          bgPosition={'center'}
-          bgRepeat={'no-repeat'}
-          width="full"
-          bgImg={'https://theuniverse.mypinata.cloud/ipfs/QmYBJaacSHEH8R6oLPJV3xakCgbYqHBqxjw3PPtXgPAMPm'}
-          bgClip={'border-box'}
+        <Container
+          justifyContent={'center'}
+          alignItems={'center'}
+          maxW={width}
+          width={1900}
+          style={{ flex: 1 }}
+          marginTop={100}
+          as="main"
         >
-          <Container
-            justifyContent={'center'}
-            alignItems={'center'}
-            maxW={width}
-            width={1900}
-            style={{ flex: 1 }}
-            marginTop={100}
-            as="main"
-          >
-            {children}
-          </Container>
-        </Box>
+          {children}
+        </Container>
       </GridItem>
       <GridItem pl="2" justifyContent={'center'} alignItems={'center'} area={'footer'}></GridItem>
     </>
