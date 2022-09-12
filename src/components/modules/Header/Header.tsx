@@ -4,7 +4,7 @@ import { ConnectButton } from '../ConnectButton';
 import { Menu as Menu2 } from '@web3uikit/icons';
 import { Typography } from '@web3uikit/core';
 
-import { Link, Popover, PopoverContent, PopoverTrigger, Stack, useColorModeValue, Text,Image } from '@chakra-ui/react';
+import { Link, Popover, PopoverContent, PopoverTrigger, Stack, useColorModeValue, Text, Image } from '@chakra-ui/react';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { FC, useEffect, useState } from 'react';
 import NextLink from 'next/link';
@@ -14,44 +14,43 @@ import { Avatar } from '@web3uikit/core';
 import NAV_LINKS from './paths';
 import { useMoralis } from 'react-moralis';
 const Header = (props: any) => {
-  const { user, isWeb3Enabled, Moralis, isAuthenticated } = useMoralis();
+  const { user, isWeb3Enabled, Moralis, enableWeb3, isAuthenticated, isWeb3EnableLoading } = useMoralis();
   const [balance, setBalance] = useState('');
   useEffect(() => {
     async function init() {
-      if (isWeb3Enabled && isAuthenticated) {
-        const CHAIN2 = await Moralis.chainId;
+      const CHAIN2 = await Moralis.chainId;
+      if (CHAIN2 !== '0x13') {
+        await Moralis.switchNetwork('0x13');
+      }
+      if (CHAIN2 === '0x13') {
+        const sendOptionsSymbol3 = {
+          contractAddress: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
+          functionName: 'balanceOf',
+          abi: collection,
+          params: {
+            account: user?.get('ethAddress'),
+          },
+        };
+        const ownerOf = await Moralis.executeFunction(sendOptionsSymbol3);
 
-        if (CHAIN2 !== '0x13') {
-          await Moralis.switchNetwork('0x13');
-        }
-        if (CHAIN2 === '0x13') {
-          const sendOptionsSymbol3 = {
-            contractAddress: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
-            functionName: 'balanceOf',
-            abi: collection,
-            params: {
-              account: user?.get('ethAddress'),
-            },
-          };
-          const ownerOf = await Moralis.executeFunction(sendOptionsSymbol3);
-        
-          
-          setBalance(Math.round(parseFloat(Moralis.Units.FromWei(ownerOf.toString()))).toString());
-        }
+        setBalance(Math.round(parseFloat(Moralis.Units.FromWei(ownerOf.toString()))).toString());
       }
     }
-    init();
-  }, [isWeb3Enabled, isAuthenticated]);
+    if (isAuthenticated) {
+      init();
+    }
+  }, [user, isWeb3Enabled, isAuthenticated]);
   return (
     <Box borderBottom="1px" backgroundColor={'#000228'} borderBottomColor="chakra-border-color">
       <Container backgroundColor={'#000228'} maxW="container.xl">
         <Flex align="center" marginLeft={0} justify="space-between">
           <MoralisLogo />
           <HStack>
-            {!user?null: <Text fontSize="1xl" marginLeft={20} textAlign={'right'}>
-              {balance === '' ? '' : balance.concat(' DKMT')}
-            </Text>}
-           
+            {!user ? null : (
+              <Text fontSize="1xl" marginLeft={20} textAlign={'right'}>
+                {balance === '' ? '' : balance.concat(' DKMT')}
+              </Text>
+            )}
 
             <Box width="40px" />
             {props.width > 900 ? (
@@ -81,15 +80,14 @@ const Header = (props: any) => {
                 </Menu>
               </Box>
             )}
-            
+
             <Image
-      src={'https://cdn.discordapp.com/attachments/907590324627595284/1001294615099486208/mint-live.png'}
-      marginLeft={50}
-      height={'40px'}
-      width={50}
-      alt="Ultimate"
-    />
-            
+              src={'https://cdn.discordapp.com/attachments/907590324627595284/1001294615099486208/mint-live.png'}
+              marginLeft={50}
+              height={'40px'}
+              width={50}
+              alt="Ultimate"
+            />
           </HStack>
         </Flex>
       </Container>
