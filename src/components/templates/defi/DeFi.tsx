@@ -5,7 +5,7 @@ import { useMoralis } from 'react-moralis';
 import numberWithCommas from 'utils/numberWithComas';
 
 const DeFi = (props: any) => {
-  const { Moralis, user, isWeb3Enabled, isWeb3EnableLoading, isAuthenticated, enableWeb3, web3 } = useMoralis();
+  const { Moralis, user, isWeb3Enabled, isWeb3EnableLoading, isAuthenticated, enableWeb3 } = useMoralis();
   const [open, setOpen] = useState(false);
   useEffect(() => {
     async function init() {
@@ -19,14 +19,9 @@ const DeFi = (props: any) => {
 
         const contract = new ethers.Contract('0xcC5413858EE7987D14184a1616403E445651D802', masterDark, provider);
 
-        const transaction = await contract
-          .connect(signer)
-          .userInfo(0, user?.get('ethAddress'))
-          .catch(() => {});
-        const pen = await contract
-          .connect(signer)
-          .pending(0, user?.get('ethAddress'))
-          .catch(() => {});
+        const transaction = await contract.connect(signer).userInfo(0, user?.get('ethAddress'));
+
+        const pen = await contract.connect(signer).pending(0, user?.get('ethAddress'));
 
         setPending(Moralis.Units.FromWei(pen));
         setDeposit(Moralis.Units.FromWei(transaction.amount));
@@ -51,7 +46,7 @@ const DeFi = (props: any) => {
           },
         };
 
-        let res3 = await Moralis.executeFunction(sendOptions2);
+        const res3 = await Moralis.executeFunction(sendOptions2);
 
         await res3.wait(3);
         const sendOptions1 = {
@@ -66,8 +61,8 @@ const DeFi = (props: any) => {
           },
         };
 
-        let res2 = await Moralis.executeFunction(sendOptions1);
-        let espera1 = await res2.wait(2);
+        const res2 = await Moralis.executeFunction(sendOptions1);
+        const espera1 = await res2.wait(2);
         console.log(JSON.stringify(espera1));
         const provider = await Moralis.enableWeb3({ provider: 'metamask' });
         const ethers = Moralis.web3Library;
@@ -76,14 +71,10 @@ const DeFi = (props: any) => {
 
         const contract = new ethers.Contract('0xcC5413858EE7987D14184a1616403E445651D802', masterDark, provider);
 
-        const transaction = await contract
-          .connect(signer)
-          .userInfo(0, user?.get('ethAddress'))
-          .catch(() => {});
-        const pen = await contract
-          .connect(signer)
-          .pending(0, user?.get('ethAddress'))
-          .catch(() => {});
+        const transaction = await contract.connect(signer).userInfo(0, user?.get('ethAddress'));
+
+        const pen = await contract.connect(signer).pending(0, user?.get('ethAddress'));
+
         console.log(pen);
         console.log(transaction.amount);
         setPending(Moralis.Units.FromWei(pen));

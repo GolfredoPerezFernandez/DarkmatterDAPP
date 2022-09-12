@@ -14,7 +14,7 @@ import { Avatar } from '@web3uikit/core';
 import NAV_LINKS from './paths';
 import { useMoralis } from 'react-moralis';
 const Header = (props: any) => {
-  const { user, isWeb3Enabled, Moralis, enableWeb3, isAuthenticated, isWeb3EnableLoading } = useMoralis();
+  const { user, isWeb3Enabled, Moralis, isAuthenticated, isWeb3EnableLoading } = useMoralis();
   const [balance, setBalance] = useState('');
   useEffect(() => {
     async function init() {
@@ -36,10 +36,10 @@ const Header = (props: any) => {
         setBalance(Math.round(parseFloat(Moralis.Units.FromWei(ownerOf.toString()))).toString());
       }
     }
-    if (isAuthenticated) {
+    if (!isWeb3EnableLoading) {
       init();
     }
-  }, [user, isWeb3Enabled, isAuthenticated]);
+  }, [user, isWeb3Enabled, isAuthenticated, isWeb3EnableLoading]);
   return (
     <Box borderBottom="1px" backgroundColor={'#000228'} borderBottomColor="chakra-border-color">
       <Container backgroundColor={'#000228'} maxW="container.xl">
