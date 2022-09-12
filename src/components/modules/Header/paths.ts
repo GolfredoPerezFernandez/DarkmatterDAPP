@@ -4,7 +4,7 @@ const NAV_LINKS: ISubNav[] = [
   { label: 'HOME', href: '/' },
   {
     label: 'GAME',
-    href: '/protected',
+    href: '/game',
   },
   {
     label: 'DeFi',

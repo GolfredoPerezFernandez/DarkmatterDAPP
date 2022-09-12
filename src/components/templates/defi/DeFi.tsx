@@ -31,6 +31,37 @@ const DeFi = (props: any) => {
     }
     init();
   }, [isAuthenticated, isWeb3Enabled]);
+
+  const handleClaim = async () => {
+    const sendOptions1 = {
+      contractAddress: '0xcC5413858EE7987D14184a1616403E445651D802',
+      functionName: 'withdraw',
+      abi: masterDark,
+      awaitReceipt: true, // should be switched to false
+      params: {
+        _pid: 0,
+        _amount: 0,
+      },
+    };
+    console.log('endSale');
+    let res2: any = await Moralis.executeFunction(sendOptions1);
+    await res2.wait(2);
+    const provider = await Moralis.enableWeb3({ provider: 'metamask' });
+    const ethers = Moralis.web3Library;
+
+    const signer = provider.getSigner();
+
+    const contract = new ethers.Contract('0xcC5413858EE7987D14184a1616403E445651D802', masterDark, provider);
+
+    const transaction = await contract.connect(signer).userInfo(0, user?.get('ethAddress'));
+
+    const pen = await contract.connect(signer).pending(0, user?.get('ethAddress'));
+
+    console.log(pen);
+    console.log(transaction.amount);
+    setPending(Moralis.Units.FromWei(pen));
+    setDeposit(Moralis.Units.FromWei(transaction.amount));
+  };
   const handleDeposit = async () => {
     console.log('endSale');
     try {
@@ -138,6 +169,7 @@ const DeFi = (props: any) => {
       bgPosition={'center'}
       bgRepeat={'no-repeat'}
       width="full"
+      paddingLeft={5}
       height={props.width < 800 ? props.height * 2.2 : props.height * 1.5}
       bgImg={'https://theuniverse.mypinata.cloud/ipfs/QmeJk3D3P6abctHSzezLhBYVhX5o9DSySfpJ3W17Pu9buM'}
       bgClip={'border-box'}
@@ -245,7 +277,7 @@ const DeFi = (props: any) => {
                         {'REWARDS: '.concat(pending).concat(' DKMT')}
                       </Text>
                       <Button
-                        onClick={handleDeposit}
+                        onClick={handleClaim}
                         isFullWidth={true}
                         color="blue"
                         text="Claim Rewards"

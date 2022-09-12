@@ -36,7 +36,7 @@ const Header = (props: any) => {
         setBalance(Math.round(parseFloat(Moralis.Units.FromWei(ownerOf.toString()))).toString());
       }
     }
-    if (!isWeb3EnableLoading) {
+    if (isWeb3Enabled) {
       init();
     }
   }, [user, isWeb3Enabled, isAuthenticated, isWeb3EnableLoading]);
