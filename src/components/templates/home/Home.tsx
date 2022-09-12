@@ -1,5 +1,5 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
-
+/* eslint-disable complexity */
 import { Box, Text, Image, HStack, VStack } from '@chakra-ui/react';
 import { Avatar, PlanCard, Button, Illustration, useNotification, notifyType, IPosition } from '@web3uikit/core';
 import { Footer } from 'components/modules';
@@ -593,57 +593,74 @@ const Home = (props: any) => {
               })}
             </Carousel>
           </Box>
-          <Box
-            style={{
-              marginTop: 0,
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 200,
-              width: props.width,
-              height: 300,
-              marginRight: props.width < 600 ? 0 : -200,
-            }}
-          >
-            <Text marginTop={0} marginLeft={props.width < 600 ? 0 : 20} minW={250} fontSize="6xl" textAlign={'left'}>
-              {'MY PLANETS '.concat(myPlanets.length)}
-            </Text>
-
-            <Carousel
-              additionalTransfrom={0}
-              arrows={false}
-              autoPlay
-              autoPlaySpeed={1}
-              centerMode={false}
-              className=""
-              containerClass="container-with-dots"
-              customTransition="all 1s linear"
-              dotListClass=""
-              draggable
-              focusOnSelect={false}
-              infinite
-              itemClass=""
-              keyBoardControl
-              minimumTouchDrag={80}
-              renderButtonGroupOutside={false}
-              renderDotsOutside={false}
-              responsive={responsive}
-              showDots={false}
-              sliderClass=""
-              slidesToSlide={0}
-              swipeable
-              transitionDuration={6000}
-              rtl={false}
+          {myPlanets.length > 0 ? (
+            <Box
+              style={{
+                marginTop: 0,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 200,
+                width: props.width,
+                height: 300,
+                marginRight: props.width < 600 ? 0 : -200,
+              }}
             >
-              {myPlanets.map((card: any) => {
-                return (
-                  <Box>
-                    <Image rounded={20} marginLeft={10} marginRight={10} width={200} height={200} src={card.image} />
-                  </Box>
-                );
-              })}
-            </Carousel>
-          </Box>
-          <Text marginBottom={5} fontSize="2xl" textAlign={'center'}>
+              <Box>
+                <Text
+                  marginTop={0}
+                  marginLeft={props.width < 600 ? 0 : 20}
+                  minW={250}
+                  fontSize="6xl"
+                  textAlign={'left'}
+                >
+                  {'MY PLANETS '.concat(myPlanets.length)}
+                </Text>
+
+                <Carousel
+                  additionalTransfrom={0}
+                  arrows={false}
+                  autoPlay
+                  autoPlaySpeed={1}
+                  centerMode={false}
+                  className=""
+                  containerClass="container-with-dots"
+                  customTransition="all 1s linear"
+                  dotListClass=""
+                  draggable
+                  focusOnSelect={false}
+                  infinite
+                  itemClass=""
+                  keyBoardControl
+                  minimumTouchDrag={80}
+                  renderButtonGroupOutside={false}
+                  renderDotsOutside={false}
+                  responsive={responsive}
+                  showDots={false}
+                  sliderClass=""
+                  slidesToSlide={0}
+                  swipeable
+                  transitionDuration={6000}
+                  rtl={false}
+                >
+                  {myPlanets.map((card: any) => {
+                    return (
+                      <Box>
+                        <Image
+                          rounded={20}
+                          marginLeft={10}
+                          marginRight={10}
+                          width={200}
+                          height={200}
+                          src={card.image}
+                        />
+                      </Box>
+                    );
+                  })}
+                </Carousel>
+              </Box>
+            </Box>
+          ) : null}
+          <Text marginBottom={5} marginTop={20} fontSize="2xl" textAlign={'center'}>
             BETA GAME RELEASE
           </Text>
           <FlipCountdown hideYear endAt={'2022-12-12 01:26:58'} onTimeUp={() => console.log("Time's up ⏳")} />
