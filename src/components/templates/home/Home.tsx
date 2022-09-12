@@ -354,6 +354,7 @@ setRewardsToClaim(rewardsToClaim2.toString())
               footer={
                 <Button
                   onClick={mintNow}
+                  disabled={isAuthenticated}
                   customize={{ backgroundColor: '#000228', textColor: 'white' }}
                   isFullWidth
                   text="Pre-Sale Creation Cost 1000 SGB"

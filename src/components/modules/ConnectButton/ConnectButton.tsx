@@ -19,6 +19,7 @@ const ConnectButton = () => {
 
   const handleAuth = async () => {
     if (isConnected) {
+      await logout()
       await disconnectAsync();
     }
     try {
