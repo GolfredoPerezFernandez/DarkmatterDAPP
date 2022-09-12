@@ -660,7 +660,7 @@ const Home = (props: any) => {
               </Box>
             </Box>
           ) : null}
-          <Text marginBottom={5} marginTop={20} fontSize="2xl" textAlign={'center'}>
+          <Text marginBottom={5} marginTop={40} fontSize="2xl" textAlign={'center'}>
             BETA GAME RELEASE
           </Text>
           <FlipCountdown hideYear endAt={'2022-12-12 01:26:58'} onTimeUp={() => console.log("Time's up ⏳")} />
