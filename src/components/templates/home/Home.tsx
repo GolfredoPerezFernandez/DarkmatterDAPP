@@ -35,8 +35,9 @@ const responsive = {
 };
 
 const Home = (props: any) => {
-  const { Moralis, user, isWeb3Enabled, isAuthenticated, authenticate } = useMoralis();
+  const { Moralis, user, isWeb3Enabled, isAuthenticated, isWeb3Loading, authenticate } = useMoralis();
   const [rewardAmount, setRewardAmount] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
 
   const [claimedAmount, setClaimedAmount] = useState<any>(0);
   const [planetsCreated, setPlanetsCreated] = useState<any>([]);
@@ -97,7 +98,7 @@ const Home = (props: any) => {
         market = [...market, newItem];
       }
       setPlanetsCreated([...market]);
-      if (isWeb3Enabled && isAuthenticated) {
+      if (isWeb3Enabled && isAuthenticated && isWeb3Loading) {
         const provider = await Moralis.enableWeb3();
         const ethers = Moralis.web3Library;
 
@@ -183,6 +184,7 @@ const Home = (props: any) => {
     }
   };
   const mintNow = async () => {
+    setLoading(true);
     if (user) {
       const provider = await Moralis.enableWeb3({ provider: 'metamask' });
       const ethers = Moralis.web3Library;
@@ -264,10 +266,14 @@ const Home = (props: any) => {
         );
 
         setRewardsToClaim(rewardsToClaim2.toString());
+        setLoading(false);
       } catch (e: any) {
         console.log('error'.concat(e.message));
+        setLoading(false);
       }
     } else {
+      setLoading(false);
+
       handleUserNotification('warning');
     }
   };
@@ -418,14 +424,16 @@ const Home = (props: any) => {
                   <Text marginTop={'0'} marginBottom={5} fontSize="6xl" textAlign={'right'}>
                     {rewardsToClaim.toString().concat('  DKMT')}
                   </Text>
-                  <Button
-                    disabled={rewardsToClaim <= 0 || user ? false : true}
-                    onClick={claimRewards}
-                    text="Claim Rewards"
-                    isFullWidth
-                    theme="secondary"
-                  />
 
+                  {rewardsToClaim > 0 ? (
+                    <Button
+                      disabled={user ? false : true}
+                      onClick={claimRewards}
+                      text="Claim Rewards"
+                      isFullWidth
+                      theme="secondary"
+                    />
+                  ) : null}
                   <Box
                     style={{
                       flex: 1,
@@ -450,7 +458,7 @@ const Home = (props: any) => {
                 footer={
                   <Button
                     onClick={mintNow}
-                    disabled={user ? false : true}
+                    disabled={user ? false : true || loading}
                     customize={{ backgroundColor: '#000228', textColor: 'white' }}
                     isFullWidth
                     text="Creation Cost 1200 SGB"
@@ -522,13 +530,15 @@ const Home = (props: any) => {
                 <Box
                   style={{ flex: 1, width: 200, alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}
                 >
-                  <Button
-                    disabled={rewardsToClaim <= 0 || user ? false : true}
-                    onClick={claimRewards}
-                    isFullWidth
-                    text="Claim Rewards"
-                    theme="secondary"
-                  />
+                  {rewardsToClaim > 0 ? (
+                    <Button
+                      disabled={user ? false : true}
+                      onClick={claimRewards}
+                      isFullWidth
+                      text="Claim Rewards"
+                      theme="secondary"
+                    />
+                  ) : null}
                 </Box>
               </Box>
             </HStack>

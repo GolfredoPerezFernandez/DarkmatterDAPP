@@ -4,38 +4,41 @@ import { getEllipsisTxt } from 'utils/format';
 import { Typography } from '@web3uikit/core';
 
 import { useMoralis } from 'react-moralis';
+import { useState } from 'react';
 const ConnectButton = () => {
   const toast = useToast();
   const { data } = useSession();
-
+  const [loading, setLoading] = useState(false);
   const { Moralis, isWeb3Enabled, authenticate, enableWeb3, logout, chainId, user } = useMoralis();
 
   const handleAuth = async () => {
+    setLoading(true);
+    console.log('entro');
     try {
-      if (isWeb3Enabled) {
-        await enableWeb3();
-        const CHAIN2 = chainId;
+      await enableWeb3();
+      console.log('entro');
+      const CHAIN2 = Moralis.getChainId();
 
-        const chainId2 = 19;
-        const chainName = 'Songbird';
-        const currencyName = 'SGB';
-        const currencySymbol = 'SGB';
-        const rpcUrl = 'https://songbird.towolabs.com/rpc';
-        const blockExplorerUrl = 'https://explorer-mumbai.maticvigil.com/';
-
-        await Moralis.addNetwork(chainId2, chainName, currencyName, currencySymbol, rpcUrl, blockExplorerUrl).then(
-          async () => {
-            if (CHAIN2 === '0x13') {
-              await authenticate({
-                signingMessage: 'Be Welcome to DarkMatter.',
-              });
-            }
-          },
-        );
+      const chainId2 = 19;
+      const chainName = 'Songbird';
+      const currencyName = 'SGB';
+      const currencySymbol = 'SGB';
+      const rpcUrl = 'https://songbird.towolabs.com/rpc';
+      const blockExplorerUrl = 'https://explorer-mumbai.maticvigil.com/';
+      console.log('entro' + CHAIN2);
+      if (CHAIN2 === '0x13') {
+        console.log('entro');
+        await authenticate({
+          signingMessage: 'Be Welcome to DarkMatter.',
+        });
       } else {
-        await enableWeb3();
+        console.log('entro');
+        await Moralis.addNetwork(chainId2, chainName, currencyName, currencySymbol, rpcUrl, blockExplorerUrl);
       }
+      setLoading(false);
     } catch (e) {
+      setLoading(false);
+
       toast({
         title: 'Oops, something is wrong...',
         description: (e as { message: string })?.message,
@@ -70,7 +73,7 @@ const ConnectButton = () => {
   }
 
   return (
-    <Button size="sm" onClick={handleAuth} color="#000228">
+    <Button size="sm" disabled={loading} onClick={handleAuth} color="#000228">
       <Typography color={'white'}> Connect Wallet</Typography>
     </Button>
   );

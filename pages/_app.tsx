@@ -1,12 +1,12 @@
-import { Box, ChakraProvider } from '@chakra-ui/react';
+import { Box, ChakraProvider, propNames } from '@chakra-ui/react';
 import { createClient, configureChains, defaultChains, WagmiConfig } from 'wagmi';
-import { extendTheme } from '@chakra-ui/react';
+import { extendTheme, Image } from '@chakra-ui/react';
 import { publicProvider } from 'wagmi/providers/public';
-import { SessionProvider  } from 'next-auth/react';
+import { SessionProvider } from 'next-auth/react';
 import type { AppProps } from 'next/app';
 import { useEffect, useState } from 'react';
 import { Loading, NotificationProvider } from '@web3uikit/core';
-import { MoralisProvider} from 'react-moralis';
+import { MoralisProvider } from 'react-moralis';
 
 const { provider, webSocketProvider } = configureChains(defaultChains, [publicProvider()]);
 
@@ -65,22 +65,28 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
                   style={{
                     justifyContent: 'center',
                     alignItems: 'center',
+                    alignSelf: 'center',
+                    paddingLeft: windowSize.width < 800 ? '20%' : '40%',
+                    paddingTop: '22%',
                     backgroundColor: '#000228',
                     flex: 1,
                     height: windowSize.height,
                     width: windowSize.width,
                   }}
                 >
+                  <Image
+                    alignSelf={'center'}
+                    src={'https://theuniverse.mypinata.cloud/ipfs/QmRcN1XhnEeyJKWDHVC7BJVKts46KWsuAyoAz8qvQsrr6i'}
+                    height={'60px'}
+                    width={190}
+                    alt="DARKMATTER"
+                  />
                   <Box
                     style={{
-                      marginLeft: '45%',
-                      paddingTop: '20%',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      flex: 1,
+                      paddingLeft: '5%',
                     }}
                   >
-                    <Loading fontSize={12} size={100} spinnerColor="#2E7DAF" spinnerType="wave" text="Loading..." />
+                    <Loading fontSize={12} size={100} spinnerColor="white" spinnerType="wave" text="Loading..." />
                   </Box>
                 </Box>
               ) : (
