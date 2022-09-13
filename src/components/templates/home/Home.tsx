@@ -132,9 +132,7 @@ const Home = (props: any) => {
         setRewardsToClaim(rewardsToClaim2.toString());
       }
     }
-    if (isWeb3Enabled) {
-      init();
-    }
+    init();
   }, [isWeb3Enabled, isAuthenticated]);
   const claimRewards = async () => {
     if (isWeb3Enabled && isAuthenticated) {
