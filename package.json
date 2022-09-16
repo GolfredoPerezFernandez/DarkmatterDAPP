@@ -46,7 +46,8 @@
     "react-multi-carousel": "^2.8.2",
     "siwe": "^1.1.6",
     "use-window-size-v2": "^2.0.2",
-    "wagmi": "^0.6.4"
+    "wagmi": "^0.6.4",
+    "web3uikit": "^1.0.4"
   },
   "devDependencies": {
     "@types/node": "18.7.6",

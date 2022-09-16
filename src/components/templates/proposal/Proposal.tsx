@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './pages.css';
-import { Tag, Widget, Blockie, Tooltip, Icon, Form, Table } from '@web3uikit/core';
+import { Tag, Widget, Tooltip, Form, Table, Avatar } from '@web3uikit/core';
+import { Blockie } from 'web3uikit';
+
 import { useMoralis, useWeb3ExecuteFunction } from 'react-moralis';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -42,10 +44,15 @@ const Proposal = () => {
 
     const votesDirection = results.map((e) => [
       e.attributes.voter,
-      <Icon
-        fill={e.attributes.votedFor ? '#2cc40a' : '#d93d3d'}
+      <Avatar
+        theme="image"
         size={24}
-        svg={e.attributes.votedFor ? 'checkmark' : 'arrowCircleDown'}
+        avatarBackground={e.attributes.votedFor ? '#2cc40a' : '#d93d3d'}
+        image={
+          e.attributes.votedFor
+            ? '"https://theuniverse.mypinata.cloud/ipfs/QmdHRmTnEmJmYpWc8yx5W4GrZi8GDCynJsNT3P7KCTBT5t"'
+            : 'https://theuniverse.mypinata.cloud/ipfs/QmQJZ2KiDbhkAcAYCx6cJHThTU6ndUBaeCsN7sF39u1jor'
+        }
       />,
     ]);
 
@@ -57,7 +64,7 @@ const Proposal = () => {
     }
   }, [isInitialized]);
 
-  async function castVote(upDown) {
+  async function castVote(upDown: any) {
     const options = {
       contractAddress: '0x403fCf1049f7F9AAF22Af5f1775E9735F3A3a4bC',
       functionName: 'voteOnProposal',
@@ -104,10 +111,7 @@ const Proposal = () => {
       <div className="contentProposal">
         <div className="proposal">
           <Link to="/">
-            <div className="backHome">
-              <Icon fill="#ffffff" size={20} svg="chevronLeft" />
-              Overview
-            </div>
+            <div className="backHome">Overview</div>
           </Link>
           <div>{proposalDetails.description}</div>
           <div className="proposalOverview">
