@@ -27,6 +27,7 @@ const ConnectButton = () => {
     console.log('entro');
     try {
       console.log('entro');
+      await enableWeb3();
       const chainId = Moralis.getChainId();
 
       const chainId2 = 19;
@@ -36,13 +37,14 @@ const ConnectButton = () => {
       const rpcUrl = 'https://songbird.towolabs.com/rpc';
       const blockExplorerUrl = 'https://explorer-mumbai.maticvigil.com/';
 
-      if (chainId !== '0x89' && chainId !== '0x13') {
+      if (chainId === '0x89' || chainId === '0x13') {
+        await authenticate({
+          signingMessage: 'Be Welcome to DarkMatter DAO.',
+        });
+      } else {
         await Moralis.addNetwork(chainId2, chainName, currencyName, currencySymbol, rpcUrl, blockExplorerUrl);
       }
 
-      await authenticate({
-        signingMessage: 'Be Welcome to DarkMatter DAO.',
-      });
       setLoading(false);
     } catch (e) {
       setLoading(false);
