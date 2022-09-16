@@ -171,7 +171,7 @@ const Proposal = () => {
                   },
                 },
               ]}
-              onSubmit={(e) => {
+              onSubmit={(e: any) => {
                 if (e.data[0].inputResult[0] === 'For') {
                   castVote(true);
                 } else {
