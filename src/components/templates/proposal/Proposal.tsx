@@ -5,7 +5,6 @@ import { Blockie } from 'web3uikit';
 
 import { useMoralis, useWeb3ExecuteFunction } from 'react-moralis';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
 
 const Proposal = () => {
   const router: any = useRouter();
@@ -110,9 +109,7 @@ const Proposal = () => {
     <>
       <div className="contentProposal">
         <div className="proposal">
-          <Link to="/">
-            <div className="backHome">Overview</div>
-          </Link>
+          <div className="backHome">Overview</div>
           <div>{proposalDetails.description}</div>
           <div className="proposalOverview">
             <Tag color={proposalDetails.color} text={proposalDetails.text} />

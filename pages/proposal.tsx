@@ -1,6 +1,6 @@
 import { Default } from 'components/layouts/Default';
 import { NextPage } from 'next';
-import { Proposal } from 'components/templates/proposal';
+import { Proposal } from 'components/templates/Proposal';
 
 const ProposalPage: NextPage<any> = (props) => {
   return (
