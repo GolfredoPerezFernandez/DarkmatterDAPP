@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import './pages.css';
 import { Tag, Widget, Tooltip, Form, Table, Avatar } from '@web3uikit/core';
 import { Blockie } from 'web3uikit';
 
