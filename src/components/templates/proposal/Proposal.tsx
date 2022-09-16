@@ -5,6 +5,7 @@ import { Blockie } from 'web3uikit';
 
 import { useMoralis, useWeb3ExecuteFunction } from 'react-moralis';
 import { useRouter } from 'next/router';
+import { Box } from '@chakra-ui/react';
 
 const Proposal = () => {
   const router: any = useRouter();
@@ -143,41 +144,45 @@ const Proposal = () => {
         )}
         <div style={{ width: '60%' }} className="votesDiv">
           <Table columnsConfig="90% 10%" data={votes} header={[<span>Address</span>, <span>Vote</span>]} pageSize={5} />
-
-          <Form
-            isDisabled={proposalDetails.text !== 'Ongoing'}
+          <Box
             style={{
               width: '35%',
               height: '250px',
               border: '1px solid rgba(6, 158, 252, 0.2)',
             }}
-            buttonConfig={{
-              isLoading: sub,
-              loadingText: 'Casting Vote',
-              text: 'Vote',
-              theme: 'secondary',
-            }}
-            data={[
-              {
-                inputWidth: '100%',
-                name: 'Cast Vote',
-                options: ['For', 'Against'],
-                type: 'radios',
-                validation: {
-                  required: true,
+          >
+            <Form
+              isDisabled={proposalDetails.text !== 'Ongoing'}
+              buttonConfig={{
+                isLoading: sub,
+                loadingText: 'Casting Vote',
+                text: 'Vote',
+                theme: 'secondary',
+              }}
+              data={[
+                {
+                  value: '',
+                  inputWidth: '100%',
+                  name: 'Cast Vote',
+                  options: ['For', 'Against'],
+                  type: 'radios',
+                  validation: {
+                    required: true,
+                  },
                 },
-              },
-            ]}
-            onSubmit={(e) => {
-              if (e.data[0].inputResult[0] === 'For') {
-                castVote(true);
-              } else {
-                castVote(false);
-              }
-              setSub(true);
-            }}
-            title="Cast Vote"
-          />
+              ]}
+              onSubmit={(e) => {
+                if (e.data[0].inputResult[0] === 'For') {
+                  castVote(true);
+                } else {
+                  castVote(false);
+                }
+                setSub(true);
+              }}
+              title="Cast Vote"
+              id={''}
+            />
+          </Box>
         </div>
       </div>
       <div className="voting"></div>
