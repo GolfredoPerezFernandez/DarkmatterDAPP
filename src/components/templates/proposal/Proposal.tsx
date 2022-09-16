@@ -115,7 +115,7 @@ const Proposal = () => {
             <Tag color={proposalDetails.color} text={proposalDetails.text} />
             <div className="proposer">
               <span>Proposed By </span>
-              <Tooltip content={proposalDetails.proposer}>
+              <Tooltip content={proposalDetails.proposer} position={'top'}>
                 <Blockie seed={proposalDetails.proposer} />
               </Tooltip>
             </div>
