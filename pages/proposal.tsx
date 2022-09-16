@@ -1,13 +1,13 @@
 import { Default } from 'components/layouts/Default';
 import { NextPage } from 'next';
-import { DAO } from 'components/templates/dao';
+import { Proposal } from 'components/templates/proposal';
 
-const DAOPage: NextPage<any> = (props) => {
+const ProposalPage: NextPage<any> = (props) => {
   return (
     <Default width={props.width} height={props.height} pageName="DAO">
-      <DAO {...props} />
+      <Proposal {...props} />
     </Default>
   );
 };
 
-export default DAOPage;
+export default ProposalPage;

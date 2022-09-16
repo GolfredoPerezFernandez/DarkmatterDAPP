@@ -4,20 +4,30 @@ import { getEllipsisTxt } from 'utils/format';
 import { Typography } from '@web3uikit/core';
 
 import { useMoralis } from 'react-moralis';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 const ConnectButton = () => {
   const toast = useToast();
   const { data } = useSession();
   const [loading, setLoading] = useState(false);
-  const { Moralis, isWeb3Enabled, authenticate, enableWeb3, logout, chainId, user } = useMoralis();
+  const { Moralis, authenticate, enableWeb3, isWeb3EnableLoading, isWeb3Enabled, logout, user } = useMoralis();
 
+  useEffect(() => {
+    async function init() {
+      await enableWeb3();
+    }
+    if (!isWeb3Enabled) {
+      setLoading(true);
+      init();
+    } else {
+      setLoading(false);
+    }
+  }, [isWeb3Enabled]);
   const handleAuth = async () => {
     setLoading(true);
     console.log('entro');
     try {
-      await enableWeb3();
       console.log('entro');
-      const CHAIN2 = Moralis.getChainId();
+      const chainId = Moralis.getChainId();
 
       const chainId2 = 19;
       const chainName = 'Songbird';
@@ -25,16 +35,14 @@ const ConnectButton = () => {
       const currencySymbol = 'SGB';
       const rpcUrl = 'https://songbird.towolabs.com/rpc';
       const blockExplorerUrl = 'https://explorer-mumbai.maticvigil.com/';
-      console.log('entro' + CHAIN2);
-      if (CHAIN2 === '0x13') {
-        console.log('entro');
-        await authenticate({
-          signingMessage: 'Be Welcome to DarkMatter.',
-        });
-      } else {
-        console.log('entro');
+
+      if (chainId !== '0x89' && chainId !== '0x13') {
         await Moralis.addNetwork(chainId2, chainName, currencyName, currencySymbol, rpcUrl, blockExplorerUrl);
       }
+
+      await authenticate({
+        signingMessage: 'Be Welcome to DarkMatter DAO.',
+      });
       setLoading(false);
     } catch (e) {
       setLoading(false);
@@ -73,7 +81,7 @@ const ConnectButton = () => {
   }
 
   return (
-    <Button size="sm" disabled={loading} onClick={handleAuth} color="#000228">
+    <Button size="sm" disabled={loading && isWeb3EnableLoading} onClick={handleAuth} color="#000228">
       <Typography color={'white'}> Connect Wallet</Typography>
     </Button>
   );

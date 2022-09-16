@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import 'react-alice-carousel/lib/alice-carousel.css';
 import { useMoralis } from 'react-moralis';
 const abi = require('./abi');
+
 const FlipCountdown = require('@rumess/react-flip-countdown');
 import Link from 'next/link';
 
@@ -35,10 +36,10 @@ const responsive = {
 };
 
 const Home = (props: any) => {
-  const { Moralis, user, isWeb3Enabled, isAuthenticated, isWeb3Loading, authenticate } = useMoralis();
+  const { Moralis, user, isWeb3Enabled, isAuthenticated, isWeb3EnableLoading, authenticate } = useMoralis();
   const [rewardAmount, setRewardAmount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
-
+  const [chainId] = useState('0x13');
   const [claimedAmount, setClaimedAmount] = useState<any>(0);
   const [planetsCreated, setPlanetsCreated] = useState<any>([]);
   const [myPlanets, setMyPlanets] = useState<any>([]);
@@ -50,61 +51,109 @@ const Home = (props: any) => {
     subscription.on('create', initPlanets);
   };
 
+  const collectionSubscriptionPolygon = async () => {
+    const query = new Moralis.Query('PlanetsPolygon');
+    const subscription = await query.subscribe();
+    subscription.on('create', initPlanets);
+  };
   async function initPlanets() {
-    const ownedItems = await Moralis.Cloud.run('getTotalPlanetsSongbird');
-    setTotalPlanets(ownedItems);
+    if (chainId === '0x89') {
+      const ownedItems = await Moralis.Cloud.run('getTotalPlanetsPolygon');
+      setTotalPlanets(ownedItems);
+    }
+    if (chainId === '0x13') {
+      const ownedItems = await Moralis.Cloud.run('getTotalPlanetsSongbird');
+      setTotalPlanets(ownedItems);
+    }
   }
   useEffect(() => {
-    collectionSubscriptionSongbird();
-
+    if (chainId === '0x89') {
+      collectionSubscriptionPolygon();
+    }
+    if (chainId === '0x13') {
+      collectionSubscriptionSongbird();
+    }
     initPlanets();
-  });
+  }, [chainId]);
 
   useEffect(() => {
     async function init() {
       setRewardAmount(0);
-      const ownedItems2 = await Moralis.Cloud.run('getPlanetsSongbird', { owner: user?.get('ethAddress') });
+      let ownedItems2: any = '';
+      const chainId2 = Moralis.getChainId();
       let market2: any[] = [];
+      let ownedItems: any = '';
 
-      for (let i = 0; i < ownedItems2.length; i++) {
-        const newItem: any = {
-          name: ownedItems2[i].name,
-          marketId: ownedItems2[i].owner,
-          tokenId: ownedItems2[i].tokenId,
-          contractType: ownedItems2[i].description,
-          tokenAddress: ownedItems2[i].tokenAddress,
-          metadataFilePath: ownedItems2[i].metadataFilePath,
-          image: ownedItems2[i].image,
-        };
+      if (chainId2 === '0x89') {
+        ownedItems2 = await Moralis.Cloud.run('getPlanetsPolygon'.toString(), { owner: user?.get('ethAddress') });
+        ownedItems = await Moralis.Cloud.run('getAllItemsPolygon');
+        for (let i = 0; i < ownedItems2.length; i++) {
+          const newItem: any = {
+            name: ownedItems2[i].name,
+            marketId: ownedItems2[i].owner,
+            tokenId: ownedItems2[i].tokenId,
+            contractType: ownedItems2[i].description,
+            tokenAddress: ownedItems2[i].tokenAddress,
+            metadataFilePath: ownedItems2[i].metadataFilePath,
+            image: ownedItems2[i].image,
+          };
 
-        market2 = [...market2, newItem];
+          market2 = [...market2, newItem];
+        }
+
+        console.log(JSON.stringify(market2));
+        setMyPlanets([...market2]);
+
+        console.log(JSON.stringify(ownedItems));
       }
+
+      console.log(ownedItems);
+      if (chainId2 === '0x13') {
+        ownedItems2 = await Moralis.Cloud.run('getPlanetsSongbird'.toString(), { owner: user?.get('ethAddress') });
+
+        ownedItems = await Moralis.Cloud.run('getAllItemsSongbird');
+
+        for (let i = 0; i < ownedItems2.length; i++) {
+          const newItem: any = {
+            name: ownedItems2[i].name,
+            marketId: ownedItems2[i].owner,
+            tokenId: ownedItems2[i].tokenId,
+            contractType: ownedItems2[i].description,
+            tokenAddress: ownedItems2[i].tokenAddress,
+            metadataFilePath: ownedItems2[i].metadataFilePath,
+            image: ownedItems2[i].image,
+          };
+
+          market2 = [...market2, newItem];
+        }
+      }
+      console.log(JSON.stringify(market2));
       setMyPlanets([...market2]);
 
-      const ownedItems = await Moralis.Cloud.run('getAllItemsSongbird');
       let market: any[] = [];
 
       for (let i = 0; i < ownedItems.length; i++) {
+        console.log(ownedItems[i].tokenId);
         const newItem: any = {
-          name: ownedItems[i].name,
-          marketId: ownedItems[i].owner,
           tokenId: ownedItems[i].tokenId,
-          contractType: ownedItems[i].description,
-          tokenAddress: ownedItems[i].tokenAddress,
-          metadataFilePath: ownedItems[i].metadataFilePath,
-          image: ownedItems[i].image,
         };
 
         market = [...market, newItem];
       }
+      console.log(market);
       setPlanetsCreated([...market]);
-      if (isWeb3Enabled && isAuthenticated && isWeb3Loading) {
-        const provider = await Moralis.enableWeb3();
+
+      if (isAuthenticated && !isWeb3EnableLoading && isWeb3Enabled) {
+        const provider = await Moralis.enableWeb3({ provider: 'metamask' });
         const ethers = Moralis.web3Library;
-
+        let contract: any = '';
+        if (chainId2 === '0x89') {
+          contract = new ethers.Contract('0x9Fa071bc5Ca5dE26C34D7aa373978A77b55321F9', abi.rewards, provider);
+        }
+        if (chainId2 === '0x13') {
+          contract = new ethers.Contract('0x89F9B8FCd6219ddF1FE994d887b036D538200f1D', abi.rewards, provider);
+        }
         const signer = provider.getSigner();
-
-        const contract = new ethers.Contract('0x3F5eE9E1632Aa3fa688875050f9C9a486bA82179', abi.rewards, provider);
 
         const transaction2 = await contract
           .connect(signer)
@@ -112,7 +161,9 @@ const Home = (props: any) => {
           .catch(() => {
             handleUserNotification('warning');
           });
-        const rewa = Moralis.Units.FromWei(transaction2[4]);
+        console.log(JSON.stringify(transaction2));
+        console.log(JSON.stringify(Moralis.Units.FromWei(parseFloat(transaction2[6]).toString())));
+        const rewa = Moralis.Units.FromWei(parseFloat(transaction2[6]).toString());
         if (parseFloat(rewa) === 0) {
           setRewardAmount(parseFloat(rewa));
         }
@@ -120,30 +171,46 @@ const Home = (props: any) => {
 
         let rewardsToClaim2 = 0;
 
-        const ownedItems3 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user?.get('ethAddress') });
+        let ownedItems3: any = '';
+
+        if (chainId2 === '0x89') {
+          const nftList = await Moralis.Web3API.account.getNFTs({
+            address: user?.get('ethAddress'),
+            chain: '0x89',
+          });
+
+          ownedItems3 = await Moralis.Cloud.run('getMyPlanetsIdPolygon', { owner: user?.get('ethAddress') });
+          console.log(nftList);
+        }
+        if (chainId2 === '0x13') {
+          ownedItems3 = await Moralis.Cloud.run('getMyPlanetsIdSongbird', { owner: user?.get('ethAddress') });
+        }
 
         await Promise.all(
           ownedItems3.map(async (item: any, index: any) => {
-            const transactionRewardsOf = await contract.connect(signer).rewardsOf(0, ownedItems2[index].tokenId);
+            const transactionRewardsOf = await contract.connect(signer).rewardsOf(0, ownedItems3[index].tokenId);
+
             rewardsToClaim2 =
               rewardsToClaim2 + Math.trunc(parseFloat(Moralis.Units.FromWei(transactionRewardsOf[1].toString())));
           }),
         );
-
         setRewardsToClaim(rewardsToClaim2.toString());
       }
     }
-    init();
-  }, [isWeb3Enabled, isAuthenticated]);
+    if (isWeb3Enabled && isWeb3Enabled && isWeb3Enabled && !isWeb3EnableLoading) {
+      init();
+    }
+  }, [isWeb3Enabled, isWeb3Enabled]);
   const claimRewards = async () => {
     if (isWeb3Enabled && isAuthenticated) {
       const provider = await Moralis.enableWeb3({ provider: 'metamask' });
       const ethers = Moralis.web3Library;
       const signer = provider.getSigner();
-      const contract = new ethers.Contract('0x3F5eE9E1632Aa3fa688875050f9C9a486bA82179', abi.rewards, provider);
+      const contract = new ethers.Contract('0x89F9B8FCd6219ddF1FE994d887b036D538200f1D', abi.rewards, provider);
 
       if (!user?.get('tokenAdded')) {
         const { window } = global.window;
+
         if (window !== undefined && window.ethereum !== undefined) {
           await window.ethereum.request({
             method: 'wallet_watchAsset',
@@ -164,7 +231,7 @@ const Home = (props: any) => {
       }
       let tokenids: any = [];
 
-      const ownedItems2 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user?.get('ethAddress') });
+      const ownedItems2 = await Moralis.Cloud.run('getMyPlanetsIdSongbird', { owner: user?.get('ethAddress') });
       for (let i = 0; i < ownedItems2.length; i++) {
         tokenids = [...tokenids, ownedItems2[i].tokenId];
       }
@@ -185,99 +252,116 @@ const Home = (props: any) => {
   };
   const mintNow = async () => {
     setLoading(true);
+    const chainId2 = Moralis.getChainId();
     if (user) {
       const provider = await Moralis.enableWeb3({ provider: 'metamask' });
       const ethers = Moralis.web3Library;
 
       const signer = provider.getSigner();
 
-      const contract = new ethers.Contract('0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4', abi.collection, provider);
+      const contract0 = new ethers.Contract('0xe4671844Fcb3cA9A80A1224B6f9A0A6c2Ba2a7d5', erc20ABI, provider);
+      const res0 = await contract0
+        .connect(signer)
+        .approve('0x825D72E626864e236baE9bBc6F1B4528a42508C5', Moralis.Units.ETH('5'));
 
-      const contract2 = new ethers.Contract('0x3F5eE9E1632Aa3fa688875050f9C9a486bA82179', abi.rewards, provider);
+      await res0.wait(3);
+      const mintAddress =
+        chainId2 === '0x89'
+          ? '0x825D72E626864e236baE9bBc6F1B4528a42508C5'
+          : chainId2 === '0x13'
+          ? '0x825D72E626864e236baE9bBc6F1B4528a42508C5'
+          : '';
+      const rewardsAddress =
+        chainId2 === '0x89'
+          ? '0x9Fa071bc5Ca5dE26C34D7aa373978A77b55321F9'
+          : chainId2 === '0x13'
+          ? '0x89F9B8FCd6219ddF1FE994d887b036D538200f1D'
+          : '';
+
+      if (mintAddress === '') {
+        return;
+      }
+      const contract = new ethers.Contract(mintAddress, abi.collection, provider);
+
+      const contract2 = new ethers.Contract(rewardsAddress, abi.rewards, provider);
 
       const transaction2 = await contract.connect(signer).mintedAmt();
-
-      const transaction = await contract
+      await contract
         .connect(signer)
-        .safeMint(1, { value: Moralis.Units.ETH(1200) })
+        .safeMint(1)
+        .then(async (err: any) => {
+          console.log(err);
+          const wait = await err.wait(3);
+
+          if (wait) {
+            const Item = Moralis.Object.extend('PlanetsSongbird');
+            const queryResult = new Item();
+            queryResult.set('owner', user.get('ethAddress'));
+            queryResult.set('planetId', (parseFloat(transaction2) + 1).toString());
+            queryResult.set('tokenAddress', '0x825D72E626864e236baE9bBc6F1B4528a42508C5');
+
+            queryResult.set('name', 'Planet #'.concat(parseInt(wait.logs[2].topics[3].toString(), 16).toString()));
+            queryResult.set('description', 'Planets are the base of your empire.');
+            queryResult.set(
+              'metadataFilePath',
+              'https://ipfs.moralis.io:2053/ipfs/QmUSRueYhgvJBF7Y5znbHWbhMHKBHPaZNjjj3apEytmDdF/metadata/'
+                .concat(parseInt(wait.logs[2].topics[3].toString(), 16).toString())
+                .concat('.json'),
+            );
+            queryResult.set('metadataFileHash', 'QmUSRueYhgvJBF7Y5znbHWbhMHKBHPaZNjjj3apEytmDdF');
+            queryResult.set(
+              'image',
+              'https://theuniverse.mypinata.cloud/ipfs/QmdBJczfNV4HHcucXxPkehqK5LG5iqU6AG3tX83WeUfdgK/'
+                .concat(parseInt(wait.logs[2].topics[3].toString(), 16).toString())
+                .concat('.png'),
+            );
+            queryResult.set('tokenId', parseInt(wait.logs[2].topics[3].toString(), 16).toString());
+
+            await queryResult.save();
+
+            handleMintNotification('success');
+            user.set('canClaim', true);
+            setMyPlanets([
+              ...myPlanets,
+              {
+                owner: user.get('ethAddress'),
+                planetId: (parseFloat(transaction2) + 1).toString(),
+                tokenAddress: '0x825D72E626864e236baE9bBc6F1B4528a42508C5',
+                name: 'Planet #'.concat(parseInt(wait.logs[2].topics[3].toString(), 16).toString()),
+                description: 'Planets are the base of your empire.',
+                metadataFilePath:
+                  'https://ipfs.moralis.io:2053/ipfs/QmUSRueYhgvJBF7Y5znbHWbhMHKBHPaZNjjj3apEytmDdF/metadata/'
+                    .concat(parseInt(wait.logs[2].topics[3].toString(), 16).toString())
+                    .concat('.json'),
+                image: 'https://theuniverse.mypinata.cloud/ipfs/QmdBJczfNV4HHcucXxPkehqK5LG5iqU6AG3tX83WeUfdgK/'
+                  .concat(parseInt(wait.logs[2].topics[3].toString(), 16).toString())
+                  .concat('.png'),
+                tokenId: parseInt(wait.logs[2].topics[3].toString(), 16).toString(),
+              },
+            ]);
+            let tokenids: any = [];
+            let rewardsToClaim2 = 0;
+
+            const ownedItems2 = await Moralis.Cloud.run('getMyPlanetsIdSongbird', { owner: user?.get('ethAddress') });
+
+            await Promise.all(
+              ownedItems2.map(async (item: any, index: any) => {
+                const transactionRewardsOf = await contract2.connect(signer).rewardsOf(0, ownedItems2[index].tokenId);
+                rewardsToClaim2 =
+                  rewardsToClaim2 + Math.trunc(parseFloat(Moralis.Units.FromWei(transactionRewardsOf[1].toString())));
+                tokenids = [...tokenids, ownedItems2[index].tokenId];
+              }),
+            );
+
+            setRewardsToClaim(rewardsToClaim2.toString());
+            setLoading(false);
+          }
+        })
         .catch(() => {
           handleNoFundsNotification('warning');
         });
-
-      const wait = await transaction?.wait();
-      try {
-        const Item = Moralis.Object.extend('PlanetsSongbird');
-        const queryResult = new Item();
-        queryResult.set('owner', user.get('ethAddress'));
-        queryResult.set('planetId', (parseFloat(transaction2) + 1).toString());
-        queryResult.set('tokenAddress', '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4');
-
-        queryResult.set('name', 'Planet #'.concat(parseInt(wait.logs[0].topics[3].toString(), 16).toString()));
-        queryResult.set('description', 'Planets are the base of your empire.');
-        queryResult.set(
-          'metadataFilePath',
-          'https://ipfs.moralis.io:2053/ipfs/QmUSRueYhgvJBF7Y5znbHWbhMHKBHPaZNjjj3apEytmDdF/metadata/'
-            .concat(parseInt(wait.logs[0].topics[3].toString(), 16).toString())
-            .concat('.json'),
-        );
-        queryResult.set('metadataFileHash', 'QmUSRueYhgvJBF7Y5znbHWbhMHKBHPaZNjjj3apEytmDdF');
-        queryResult.set(
-          'image',
-          'https://theuniverse.mypinata.cloud/ipfs/QmdBJczfNV4HHcucXxPkehqK5LG5iqU6AG3tX83WeUfdgK/'
-            .concat(parseInt(wait.logs[0].topics[3].toString(), 16).toString())
-            .concat('.png'),
-        );
-        queryResult.set('tokenId', parseInt(wait.logs[0].topics[3].toString(), 16).toString());
-
-        await queryResult.save();
-
-        user.set('canClaim', true);
-        handleMintNotification('success');
-        setMyPlanets([
-          ...myPlanets,
-          {
-            owner: user.get('ethAddress'),
-            planetId: (parseFloat(transaction2) + 1).toString(),
-            tokenAddress: '0x17BFc1E8CB7E07eE69697c6fd016f9D02D1A59A4',
-            name: 'Planet #'.concat(parseInt(wait.logs[0].topics[3].toString(), 16).toString()),
-            description: 'Planets are the base of your empire.',
-            metadataFilePath:
-              'https://ipfs.moralis.io:2053/ipfs/QmUSRueYhgvJBF7Y5znbHWbhMHKBHPaZNjjj3apEytmDdF/metadata/'
-                .concat(parseInt(wait.logs[0].topics[3].toString(), 16).toString())
-                .concat('.json'),
-            image: 'https://theuniverse.mypinata.cloud/ipfs/QmdBJczfNV4HHcucXxPkehqK5LG5iqU6AG3tX83WeUfdgK/'
-              .concat(parseInt(wait.logs[0].topics[3].toString(), 16).toString())
-              .concat('.png'),
-            tokenId: parseInt(wait.logs[0].topics[3].toString(), 16).toString(),
-          },
-        ]);
-        let tokenids: any = [];
-        let rewardsToClaim2 = 0;
-
-        const ownedItems2 = await Moralis.Cloud.run('getMyPlanetsId', { owner: user?.get('ethAddress') });
-
-        await Promise.all(
-          ownedItems2.map(async (item: any, index: any) => {
-            const transactionRewardsOf = await contract2.connect(signer).rewardsOf(0, ownedItems2[index].tokenId);
-            rewardsToClaim2 =
-              rewardsToClaim2 + Math.trunc(parseFloat(Moralis.Units.FromWei(transactionRewardsOf[1].toString())));
-            tokenids = [...tokenids, ownedItems2[index].tokenId];
-          }),
-        );
-
-        setRewardsToClaim(rewardsToClaim2.toString());
-        setLoading(false);
-      } catch (e: any) {
-        console.log('error'.concat(e.message));
-        setLoading(false);
-      }
-    } else {
-      setLoading(false);
-
-      handleUserNotification('warning');
     }
   };
-
   const dispatch = useNotification();
 
   const handleNoNftNotification = (type: notifyType, icon?: React.ReactElement, position?: IPosition) => {
@@ -312,7 +396,7 @@ const Home = (props: any) => {
   const handleNoFundsNotification = (type: notifyType, icon?: React.ReactElement, position?: IPosition) => {
     dispatch({
       type,
-      message: 'Insufficient funds',
+      message: 'Canceled',
       title: 'Gas * price',
       icon,
       position: position || 'topR',
@@ -358,7 +442,9 @@ const Home = (props: any) => {
                     disabled={user ? false : true}
                     customize={{ backgroundColor: '#000228', textColor: 'white' }}
                     isFullWidth
-                    text="Pre-Sale Creation Cost 1000 SGB"
+                    text={'MINT COST'
+                      .concat(chainId === '0x13' ? '5000' : '')
+                      .concat(chainId === '0x13' ? 'COOT' : 'MATIC')}
                     theme="custom"
                   />
                 }
@@ -461,7 +547,9 @@ const Home = (props: any) => {
                     disabled={user ? false : true || loading}
                     customize={{ backgroundColor: '#000228', textColor: 'white' }}
                     isFullWidth
-                    text="Creation Cost 1200 SGB"
+                    text={'MINT COST'
+                      .concat(chainId === '0x13' ? ' 4000 ' : ' 36 ')
+                      .concat(chainId === '0x13' ? 'COOT' : 'MATIC')}
                     theme="custom"
                   />
                 }
@@ -543,63 +631,65 @@ const Home = (props: any) => {
               </Box>
             </HStack>
           )}
-
-          <Box
-            style={{
-              marginTop: 50,
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 20,
-              width: props.width,
-              height: 300,
-              marginRight: props.width < 600 ? 0 : -200,
-            }}
-          >
-            <Text
-              marginTop={'50px'}
-              marginLeft={props.width < 600 ? 0 : 20}
-              minW={250}
-              fontSize="6xl"
-              textAlign={'left'}
+          {parseFloat(planetsCreated.length) > 0 ? (
+            <Box
+              style={{
+                marginTop: 50,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 20,
+                width: props.width,
+                height: 300,
+                marginRight: props.width < 600 ? 0 : -200,
+              }}
             >
-              {planets.toString().concat('/10000 PLANETS')}
-            </Text>
+              <Text
+                marginTop={'50px'}
+                marginLeft={props.width < 600 ? 0 : 20}
+                minW={250}
+                fontSize="6xl"
+                textAlign={'left'}
+              >
+                {planets.toString().concat('/10000 PLANETS')}
+              </Text>
 
-            <Carousel
-              additionalTransfrom={0}
-              arrows={false}
-              autoPlay
-              autoPlaySpeed={1}
-              centerMode={false}
-              className=""
-              containerClass="container-with-dots"
-              customTransition="all 1s linear"
-              dotListClass=""
-              draggable
-              focusOnSelect={false}
-              infinite
-              itemClass=""
-              keyBoardControl
-              minimumTouchDrag={80}
-              renderButtonGroupOutside={false}
-              renderDotsOutside={false}
-              responsive={responsive}
-              showDots={false}
-              sliderClass=""
-              slidesToSlide={0}
-              swipeable
-              transitionDuration={6000}
-              rtl={false}
-            >
-              {planetsCreated.map((card: any) => {
-                return (
-                  <Box>
-                    <Image rounded={20} marginLeft={10} marginRight={10} width={200} height={200} src={card.image} />
-                  </Box>
-                );
-              })}
-            </Carousel>
-          </Box>
+              <Carousel
+                additionalTransfrom={0}
+                arrows={false}
+                autoPlay
+                autoPlaySpeed={1}
+                centerMode={false}
+                className=""
+                containerClass="container-with-dots"
+                customTransition="all 1s linear"
+                dotListClass=""
+                draggable
+                focusOnSelect={false}
+                infinite
+                itemClass=""
+                keyBoardControl
+                minimumTouchDrag={80}
+                renderButtonGroupOutside={false}
+                renderDotsOutside={false}
+                responsive={responsive}
+                showDots={false}
+                sliderClass=""
+                slidesToSlide={0}
+                swipeable
+                transitionDuration={6000}
+                rtl={false}
+              >
+                {planetsCreated.map((card: any) => {
+                  return (
+                    <Box>
+                      <Image rounded={20} marginLeft={10} marginRight={10} width={200} height={200} src={card.image} />
+                    </Box>
+                  );
+                })}
+              </Carousel>
+            </Box>
+          ) : null}
+
           {myPlanets.length > 0 ? (
             <Box
               style={{
@@ -687,3 +777,533 @@ const Home = (props: any) => {
 };
 
 export default Home;
+
+export const erc20ABI = [
+  {
+    inputs: [
+      {
+        internalType: 'string',
+        name: 'name',
+        type: 'string',
+      },
+      {
+        internalType: 'string',
+        name: 'symbol',
+        type: 'string',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'constructor',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'owner',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'spender',
+        type: 'address',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'value',
+        type: 'uint256',
+      },
+    ],
+    name: 'Approval',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'uint8',
+        name: 'version',
+        type: 'uint8',
+      },
+    ],
+    name: 'Initialized',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: '_newCap',
+        type: 'uint256',
+      },
+    ],
+    name: 'MaxTotalSupplyUpdated',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'account',
+        type: 'address',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'cap',
+        type: 'uint256',
+      },
+    ],
+    name: 'MinterUpdate',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'previousOwner',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'newOwner',
+        type: 'address',
+      },
+    ],
+    name: 'OwnershipTransferred',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'from',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'to',
+        type: 'address',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'value',
+        type: 'uint256',
+      },
+    ],
+    name: 'Transfer',
+    type: 'event',
+  },
+  {
+    inputs: [],
+    name: 'MAX_TOTAL_SUPPLY',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'owner',
+        type: 'address',
+      },
+      {
+        internalType: 'address',
+        name: 'spender',
+        type: 'address',
+      },
+    ],
+    name: 'allowance',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'spender',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+    ],
+    name: 'approve',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'account',
+        type: 'address',
+      },
+    ],
+    name: 'balanceOf',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+    ],
+    name: 'burn',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'account',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+    ],
+    name: 'burnFrom',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'decimals',
+    outputs: [
+      {
+        internalType: 'uint8',
+        name: '',
+        type: 'uint8',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'spender',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'subtractedValue',
+        type: 'uint256',
+      },
+    ],
+    name: 'decreaseAllowance',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'spender',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'addedValue',
+        type: 'uint256',
+      },
+    ],
+    name: 'increaseAllowance',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '_initial',
+        type: 'uint256',
+      },
+    ],
+    name: 'initialize',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '_recipient',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: '_amount',
+        type: 'uint256',
+      },
+    ],
+    name: 'mint',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
+    name: 'minters',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
+    name: 'minters_minted',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'name',
+    outputs: [
+      {
+        internalType: 'string',
+        name: '',
+        type: 'string',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'owner',
+    outputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '_newCap',
+        type: 'uint256',
+      },
+    ],
+    name: 'resetMaxTotalSupply',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '_account',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: '_minterCap',
+        type: 'uint256',
+      },
+    ],
+    name: 'setMinter',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'symbol',
+    outputs: [
+      {
+        internalType: 'string',
+        name: '',
+        type: 'string',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalSupply',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'to',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+    ],
+    name: 'transfer',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'from',
+        type: 'address',
+      },
+      {
+        internalType: 'address',
+        name: 'to',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+    ],
+    name: 'transferFrom',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'newOwner',
+        type: 'address',
+      },
+    ],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+];

@@ -1,4 +1,4 @@
-import { Box, ChakraProvider, propNames } from '@chakra-ui/react';
+import { Box, ChakraProvider } from '@chakra-ui/react';
 import { createClient, configureChains, defaultChains, WagmiConfig } from 'wagmi';
 import { extendTheme, Image } from '@chakra-ui/react';
 import { publicProvider } from 'wagmi/providers/public';
@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { Loading, NotificationProvider } from '@web3uikit/core';
 import { MoralisProvider } from 'react-moralis';
 
+import './pages.css';
 const { provider, webSocketProvider } = configureChains(defaultChains, [publicProvider()]);
 
 const client = createClient({

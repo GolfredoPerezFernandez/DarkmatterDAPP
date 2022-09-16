@@ -4,7 +4,7 @@ import { ConnectButton } from '../ConnectButton';
 import { Menu as Menu2 } from '@web3uikit/icons';
 import { Typography } from '@web3uikit/core';
 
-import { Link, Popover, PopoverContent, PopoverTrigger, Stack, useColorModeValue, Text, Image } from '@chakra-ui/react';
+import { Link, Popover, PopoverContent, PopoverTrigger, Stack, useColorModeValue, Text } from '@chakra-ui/react';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { FC, useEffect, useState } from 'react';
 import NextLink from 'next/link';
@@ -19,10 +19,14 @@ const Header = (props: any) => {
 
   useEffect(() => {
     async function init() {
+      const chainId = Moralis.getChainId();
       const sendOptionsSymbol3 = {
-        contractAddress: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
+        contractAddress:
+          chainId === '0x89'
+            ? '0x7cf12057804499A21A08c40B87E3DE9Ff237E566'
+            : '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
         functionName: 'balanceOf',
-        abi: collection,
+        abi: erc20ABI,
         params: {
           account: user?.get('ethAddress'),
         },
@@ -31,7 +35,7 @@ const Header = (props: any) => {
 
       setBalance(Math.round(parseFloat(Moralis.Units.FromWei(ownerOf.toString()))).toString());
     }
-    if (isWeb3Enabled && isAuthenticated && user) {
+    if (isWeb3Enabled && isAuthenticated && !isWeb3EnableLoading && user) {
       init();
     }
   }, [user, isWeb3Enabled, isAuthenticated, isWeb3EnableLoading]);
@@ -80,14 +84,6 @@ const Header = (props: any) => {
                 </Menu>
               </Box>
             )}
-
-            <Image
-              src={'https://cdn.discordapp.com/attachments/907590324627595284/1001294615099486208/mint-live.png'}
-              marginLeft={50}
-              height={'40px'}
-              width={50}
-              alt="Ultimate"
-            />
           </HStack>
         </Flex>
       </Container>
@@ -229,7 +225,7 @@ const NavItem2: FC<any> = ({ label, children, href }) => {
   );
 };
 
-const collection = [
+export const erc20ABI = [
   {
     inputs: [
       {

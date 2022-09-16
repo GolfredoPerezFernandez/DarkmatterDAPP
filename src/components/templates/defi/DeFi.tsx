@@ -7,7 +7,7 @@ import { useMoralis } from 'react-moralis';
 import numberWithCommas from 'utils/numberWithComas';
 
 const DeFi = (props: any) => {
-  const { Moralis, user, isWeb3Enabled, logout, isAuthenticated } = useMoralis();
+  const { Moralis, user, isWeb3Enabled, logout, isAuthenticated, isWeb3EnableLoading } = useMoralis();
 
   const [burned, setBurned] = React.useState<any>(0);
   const [circulating, setCirculating] = React.useState<any>(0);
@@ -15,31 +15,53 @@ const DeFi = (props: any) => {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     async function init() {
-      const options3 = {
-        contractAddress: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
-        functionName: 'balanceOf',
-        abi: erc20ABI,
-        params: { account: '0x000000000000000000000000000000000000dead' },
-      };
-      const balanceOf: any = await Moralis.executeFunction(options3);
+      const chainId = Moralis.getChainId();
+      if (chainId === '0x89') {
+        const options3 = {
+          contractAddress: '0x7cf12057804499A21A08c40B87E3DE9Ff237E566',
+          functionName: 'balanceOf',
+          abi: erc20ABI,
+          params: { account: '0x000000000000000000000000000000000000dead' },
+        };
+        const balanceOf: any = await Moralis.executeFunction(options3);
 
-      setBurned(parseFloat(balanceOf));
+        setBurned(parseFloat(balanceOf));
 
-      const options4 = {
-        contractAddress: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
-        functionName: 'totalSupply',
-        abi: erc20ABI,
-      };
-      const totalSupply: any = await Moralis.executeFunction(options4);
-      const val: any =
-        parseFloat(await Moralis.Units.FromWei(totalSupply.toString())) -
-        parseFloat(await Moralis.Units.FromWei(balanceOf.toString()));
-      setCirculating(val);
+        const options4 = {
+          contractAddress: '0x7cf12057804499A21A08c40B87E3DE9Ff237E566',
+          functionName: 'totalSupply',
+          abi: erc20ABI,
+        };
+        const totalSupply: any = await Moralis.executeFunction(options4);
+        const val: any =
+          parseFloat(await Moralis.Units.FromWei(totalSupply.toString())) -
+          parseFloat(await Moralis.Units.FromWei(balanceOf.toString()));
+        setCirculating(val);
+      } else if (chainId === '0x13') {
+        const options3 = {
+          contractAddress: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
+          functionName: 'balanceOf',
+          abi: erc20ABI,
+          params: { account: '0x000000000000000000000000000000000000dead' },
+        };
+        const balanceOf: any = await Moralis.executeFunction(options3);
+
+        setBurned(parseFloat(balanceOf));
+
+        const options4 = {
+          contractAddress: '0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6',
+          functionName: 'totalSupply',
+          abi: erc20ABI,
+        };
+        const totalSupply: any = await Moralis.executeFunction(options4);
+        const val: any =
+          parseFloat(await Moralis.Units.FromWei(totalSupply.toString())) -
+          parseFloat(await Moralis.Units.FromWei(balanceOf.toString()));
+        setCirculating(val);
+      }
     }
-    if (isWeb3Enabled) {
+    if (isWeb3Enabled && !isWeb3EnableLoading) {
       init();
-    } else {
-      logout();
     }
 
     Moralis.onAccountChanged(async () => {
@@ -48,24 +70,34 @@ const DeFi = (props: any) => {
   }, [isWeb3Enabled, isAuthenticated]);
 
   const handleUpdate = async () => {
-    const provider = await Moralis.enableWeb3({ provider: 'metamask' });
-    const ethers = Moralis.web3Library;
+    try {
+      const provider = await Moralis.enableWeb3({ provider: 'metamask' });
+      const ethers = Moralis.web3Library;
 
-    const signer = provider.getSigner();
+      const signer = provider.getSigner();
+      let contract: any = '';
+      const chainId = Moralis.getChainId();
 
-    const contract = new ethers.Contract('0xcC5413858EE7987D14184a1616403E445651D802', masterDark, provider);
+      if (chainId === '0x89') {
+        contract = new ethers.Contract('0x825D72E626864e236baE9bBc6F1B4528a42508C5', masterDark, provider);
+      } else if (chainId === '0x13') {
+        contract = new ethers.Contract('0xf84558a4003f0911DB3F74917d6211Cf293145CC', masterDark, provider);
+      }
 
-    const transaction = await contract.connect(signer).userInfo(0, user?.get('ethAddress'));
+      const transaction = await contract.connect(signer).userInfo(0, user?.get('ethAddress'));
 
-    const pen = await contract.connect(signer).pending(0, user?.get('ethAddress'));
+      const pen = await contract.connect(signer).pending(0, user?.get('ethAddress'));
 
-    setPending(Moralis.Units.FromWei(pen));
-    setDeposit(Moralis.Units.FromWei(transaction.amount));
+      setPending(Moralis.Units.FromWei(pen));
+      setDeposit(Moralis.Units.FromWei(transaction.amount));
+    } catch (e: any) {
+      console.log(e.message);
+    }
   };
 
   const handleWithdraw = async () => {
     const sendOptions1 = {
-      contractAddress: '0xcC5413858EE7987D14184a1616403E445651D802',
+      contractAddress: '0xf84558a4003f0911DB3F74917d6211Cf293145CC',
       functionName: 'withdraw',
       abi: masterDark,
       awaitReceipt: true,
@@ -81,7 +113,7 @@ const DeFi = (props: any) => {
 
     const signer = provider.getSigner();
 
-    const contract = new ethers.Contract('0xcC5413858EE7987D14184a1616403E445651D802', masterDark, provider);
+    const contract = new ethers.Contract('0xf84558a4003f0911DB3F74917d6211Cf293145CC', masterDark, provider);
 
     const transaction = await contract.connect(signer).userInfo(0, user?.get('ethAddress'));
 
@@ -92,7 +124,7 @@ const DeFi = (props: any) => {
   };
   const handleClaim = async () => {
     const sendOptions1 = {
-      contractAddress: '0xcC5413858EE7987D14184a1616403E445651D802',
+      contractAddress: '0xf84558a4003f0911DB3F74917d6211Cf293145CC',
       functionName: 'withdraw',
       abi: masterDark,
       awaitReceipt: true,
@@ -108,7 +140,7 @@ const DeFi = (props: any) => {
 
     const signer = provider.getSigner();
 
-    const contract = new ethers.Contract('0xcC5413858EE7987D14184a1616403E445651D802', masterDark, provider);
+    const contract = new ethers.Contract('0xf84558a4003f0911DB3F74917d6211Cf293145CC', masterDark, provider);
 
     const transaction = await contract.connect(signer).userInfo(0, user?.get('ethAddress'));
 
@@ -132,11 +164,11 @@ const DeFi = (props: any) => {
         const contract0 = new ethers.Contract('0x433eb2d4ccAe3eC8Bb7AFB58aCcA92BBF6d479b6', erc20ABI, provider);
         const res0 = await contract0
           .connect(signer)
-          .approve('0xcC5413858EE7987D14184a1616403E445651D802', Moralis.Units.ETH(values.amount));
+          .approve('0xf84558a4003f0911DB3F74917d6211Cf293145CC', Moralis.Units.ETH(values.amount));
 
         await res0.wait(3);
 
-        const contract = new ethers.Contract('0xcC5413858EE7987D14184a1616403E445651D802', masterDark, provider);
+        const contract = new ethers.Contract('0xf84558a4003f0911DB3F74917d6211Cf293145CC', masterDark, provider);
 
         const res = await contract.connect(signer).deposit(0, Moralis.Units.ETH(values.amount));
 
@@ -184,10 +216,6 @@ const DeFi = (props: any) => {
     amount: '',
   });
 
-  const handleOpen = (val: boolean) => {
-    setOpen(val);
-  };
-
   const handleChanges = (prop: keyof any) => (event: React.ChangeEvent<any>) => {
     if (prop === 'amount') {
       if (parseFloat(event.target.value).toString().length > 12) {
@@ -195,6 +223,9 @@ const DeFi = (props: any) => {
       }
     }
     setValues({ ...values, [prop]: event.target.value });
+  };
+  const handleOpen = (val: boolean) => {
+    setOpen(val);
   };
 
   return (
@@ -603,6 +634,27 @@ const crowdFunding = [
 
 export const masterDark = [
   {
+    inputs: [
+      {
+        internalType: 'contract IERC20',
+        name: '_erc20',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: '_rewardPerBlock',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: '_startBlock',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'constructor',
+  },
+  {
     anonymous: false,
     inputs: [
       {
@@ -744,147 +796,6 @@ export const masterDark = [
         name: '_pid',
         type: 'uint256',
       },
-    ],
-    name: 'emergencyWithdraw',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: '_amount',
-        type: 'uint256',
-      },
-    ],
-    name: 'fund',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'massUpdatePools',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'renounceOwnership',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: '_pid',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: '_allocPoint',
-        type: 'uint256',
-      },
-      {
-        internalType: 'bool',
-        name: '_withUpdate',
-        type: 'bool',
-      },
-    ],
-    name: 'set',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: '_rewardPerBlock',
-        type: 'uint256',
-      },
-    ],
-    name: 'setRewardPerBlock',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'newOwner',
-        type: 'address',
-      },
-    ],
-    name: 'transferOwnership',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: '_pid',
-        type: 'uint256',
-      },
-    ],
-    name: 'updatePool',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: '_pid',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: '_amount',
-        type: 'uint256',
-      },
-    ],
-    name: 'withdraw',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'contract IERC20',
-        name: '_erc20',
-        type: 'address',
-      },
-      {
-        internalType: 'uint256',
-        name: '_rewardPerBlock',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: '_startBlock',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'nonpayable',
-    type: 'constructor',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: '_pid',
-        type: 'uint256',
-      },
       {
         internalType: 'address',
         name: '_user',
@@ -900,6 +811,19 @@ export const masterDark = [
       },
     ],
     stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '_pid',
+        type: 'uint256',
+      },
+    ],
+    name: 'emergencyWithdraw',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
   {
@@ -926,6 +850,26 @@ export const masterDark = [
       },
     ],
     stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '_amount',
+        type: 'uint256',
+      },
+    ],
+    name: 'fund',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'massUpdatePools',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
   {
@@ -1027,6 +971,13 @@ export const masterDark = [
   },
   {
     inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
     name: 'rewardPerBlock',
     outputs: [
       {
@@ -1036,6 +987,42 @@ export const masterDark = [
       },
     ],
     stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '_pid',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: '_allocPoint',
+        type: 'uint256',
+      },
+      {
+        internalType: 'bool',
+        name: '_withUpdate',
+        type: 'bool',
+      },
+    ],
+    name: 'set',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '_rewardPerBlock',
+        type: 'uint256',
+      },
+    ],
+    name: 'setRewardPerBlock',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
   {
@@ -1080,6 +1067,32 @@ export const masterDark = [
   {
     inputs: [
       {
+        internalType: 'address',
+        name: 'newOwner',
+        type: 'address',
+      },
+    ],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '_pid',
+        type: 'uint256',
+      },
+    ],
+    name: 'updatePool',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
         internalType: 'uint256',
         name: '',
         type: 'uint256',
@@ -1104,6 +1117,24 @@ export const masterDark = [
       },
     ],
     stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '_pid',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: '_amount',
+        type: 'uint256',
+      },
+    ],
+    name: 'withdraw',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
 ];
