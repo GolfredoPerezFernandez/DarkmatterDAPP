@@ -141,14 +141,8 @@ const Proposal = () => {
             </Widget>
           </div>
         )}
-        <div className="votesDiv">
-          <Table
-            style={{ width: '60%' }}
-            columnsConfig="90% 10%"
-            data={votes}
-            header={[<span>Address</span>, <span>Vote</span>]}
-            pageSize={5}
-          />
+        <div style={{ width: '60%' }} className="votesDiv">
+          <Table columnsConfig="90% 10%" data={votes} header={[<span>Address</span>, <span>Vote</span>]} pageSize={5} />
 
           <Form
             isDisabled={proposalDetails.text !== 'Ongoing'}
